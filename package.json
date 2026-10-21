@@ -1,0 +1,33 @@
+{
+  "name": "miniledger-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MiniLedger - Production-Ready Personal Money-Lending Tracker",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspace=@miniledger/shared build && npm run --workspace=@miniledger/api build",
+    "dev:api": "npm run --workspace=@miniledger/api dev",
+    "dev:mobile": "npm run --workspace=@miniledger/mobile dev",
+    "test": "npm run --workspace=@miniledger/api test",
+    "test:unit": "npm run --workspace=@miniledger/api test:unit",
+    "test:integration": "npm run --workspace=@miniledger/api test:integration",
+    "typecheck": "npm run --workspaces --if-present typecheck",
+    "lint": "npm run --workspaces --if-present lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
+    "db:migrate": "npm run --workspace=@miniledger/api db:migrate",
+    "db:seed": "npm run --workspace=@miniledger/api db:seed"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
