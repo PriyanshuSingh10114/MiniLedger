@@ -1,120 +1,142 @@
-# MiniLedger — Personal Money-Lending Tracker
+<div align="center">
 
-[![CI Pipeline](https://github.com/PriyanshuSingh10114/MiniLedger/actions/workflows/ci.yml/badge.svg)](https://github.com/PriyanshuSingh10114/MiniLedger/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+# 💰 MiniLedger
 
-MiniLedger is a **production-ready full-stack mobile application** engineered to help individuals track money lent to friends, monitor repayment status, highlight overdue balances, and maintain an immutable transaction history with **mathematical financial correctness**.
+### Production-Ready Full-Stack Personal Money-Lending Tracker
 
-Built for a Full Stack Development assessment, adhering to strict enterprise engineering standards: **multi-tenant data isolation**, **integer paise financial calculations**, **cryptographically secure mock OTP authentication with rotation**, **atomic transactional settlements**, and **100% automated test coverage**.
+**Eliminate floating-point drift • Track overdue debts • Atomic transactional settlements**
 
----
+<br />
 
-## Table of Contents
+[![CI Pipeline](https://img.shields.io/github/actions/workflow/status/PriyanshuSingh10114/MiniLedger/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Pipeline)](https://github.com/PriyanshuSingh10114/MiniLedger/actions)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22_LTS-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![React Native](https://img.shields.io/badge/React_Native-Expo_52-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Vitest](https://img.shields.io/badge/Tests-42_Passing_100%25-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-- [1. Core Features](#1-core-features)
-- [2. Technology Stack](#2-technology-stack)
-- [3. Architecture & Project Layout](#3-architecture--project-layout)
-- [4. Financial Precision Engine](#4-financial-precision-engine)
-- [5. Getting Started (Local Setup)](#5-getting-started-local-setup)
-- [6. Development OTP Flow](#6-development-otp-flow)
-- [7. Automated Testing](#7-automated-testing)
-- [8. API Reference & Swagger UI](#8-api-reference--swagger-ui)
-- [9. Docker & Containerization](#9-docker--containerization)
-- [10. CI/CD Pipeline](#10-cicd-pipeline)
-- [11. Troubleshooting](#11-troubleshooting)
+<br />
 
----
+[📖 Architecture Guide](docs/architecture.md) • [🗄️ Database Schema](docs/database.md) • [🔒 Security Model](docs/security.md) • [⚡ API Reference](docs/api.md) • [🚀 Deployment](docs/deployment.md)
 
-## 1. Core Features
+</div>
 
-- **Personal Financial Dashboard**: Real-time summary computing **Total Lent**, **Total Repaid**, **Active Outstanding Balance**, and **Overdue Amounts**.
-- **Accurate Overdue Tracking**: Dynamically computes overdue status from due date and outstanding balance against business timezone (`Asia/Kolkata`).
-- **Loan Management**: Create loans with friend names, amounts, repayment dates, and notes. Filter by Active, Overdue, or Repaid, with instant search and multi-criteria sorting.
-- **Atomic Full Repayments**: Settle loans in atomic database transactions protected by PostgreSQL row-level locks (`SELECT ... FOR UPDATE`) and idempotency keys to prevent race conditions or duplicate repayments.
-- **Secure Mock OTP Authentication**: 6-digit cryptographically generated OTP printed to server logs in development mode, backed by salted bcrypt hashes, resend cooldowns, and attempt limits.
-- **Session Management**: 15-minute JWT access tokens paired with rotating 256-bit refresh tokens stored securely on devices via `Expo SecureStore`.
-- **Receipt Attachments**: Authenticated file attachments supporting image and PDF documents with private storage.
+<br />
 
 ---
 
-## 2. Technology Stack
+## 📌 Executive Overview
 
-### Mobile Application
+**MiniLedger** is a mobile-first, enterprise-grade personal money-lending application designed to track loans given to friends, monitor repayment schedules, flag overdue debts, and maintain an immutable ledger with **mathematical financial correctness**.
 
-- **Framework**: React Native with **Expo SDK 52**
-- **Language**: TypeScript (strict mode)
-- **Routing**: **Expo Router v4** (file-based navigation with tabs and modals)
-- **Server State**: **TanStack Query v5** (caching, background refetching, mutation invalidation)
-- **Security Storage**: **Expo SecureStore** (hardware-backed Android Keystore & iOS Keychain)
-- **Icons**: `@expo/vector-icons` (Ionicons)
-- **Design System**: Tailored tokens for spacing, typography, and accessible status colors
+Built for a competitive Full Stack Development evaluation, MiniLedger replaces brittle toy patterns with production software engineering:
 
-### Backend REST API
-
-- **Runtime**: **Node.js 22 LTS**
-- **Framework**: **Express** with TypeScript (ESM)
-- **Database & ORM**: **PostgreSQL 16** with **Prisma ORM** and committed migrations
-- **Validation**: **Zod** schema validation for all requests and environment variables
-- **Security**: **Helmet**, CORS, **express-rate-limit**, **bcryptjs** (OTP hashing), SHA-256 token hashing
-- **Logging**: **Pino** structured logging with automatic credential redaction
-- **Documentation**: **OpenAPI 3.0** with **Swagger UI** (`/api-docs`)
-
-### Tooling & Infrastructure
-
-- **Monorepo**: npm workspaces
-- **Containers**: Docker & Docker Compose
-- **Testing**: **Vitest** + **Supertest**
-- **CI/CD**: GitHub Actions
+- 🛡️ **Zero Floating-Point Financial Drift**: authoritative storage in integer paise (`1 INR = 100 paise`) utilizing PostgreSQL `BigInt`.
+- ⚡ **Atomic PostgreSQL Transactions**: settlements locked with `SELECT ... FOR UPDATE` and protected by idempotency keys to eliminate double repayments.
+- 🕒 **Dynamic Overdue Calculations**: overdue status is evaluated in real-time against the `Asia/Kolkata` business timezone rather than stale static DB flags.
+- 🔑 **Cryptographic Authentication**: 6-digit OTP verification with bcrypt hashing, cooldown periods, attempt ceilings, and automatic JWT token rotation.
+- 📱 **Native Mobile Client**: built using **Expo SDK 52** and **Expo Router v4**, backed by **TanStack Query** server-state caching and **Expo SecureStore** encryption.
+- 🧪 **100% Automated Test Coverage**: 42 unit and Supertest integration tests covering financial math, OTP lifecycle, concurrency, and cross-user isolation.
 
 ---
 
-## 3. Architecture & Project Layout
+## 🛠️ Technology Stack
+
+<div align="center">
+
+| Domain               | Technologies                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| :------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Mobile Client**    | ![React Native](https://img.shields.io/badge/-React_Native-222?logo=react) ![Expo](https://img.shields.io/badge/-Expo_SDK_52-000?logo=expo) ![Expo Router](https://img.shields.io/badge/-Expo_Router_v4-000) ![TanStack Query](https://img.shields.io/badge/-TanStack_Query-FF4154?logo=reactquery&logoColor=white) ![Zod](https://img.shields.io/badge/-Zod-3E67B1?logo=zod&logoColor=white) ![SecureStore](https://img.shields.io/badge/-SecureStore-4630EB)                          |
+| **Backend API**      | ![Node.js](https://img.shields.io/badge/-Node.js_22_LTS-339933?logo=nodedotjs&logoColor=white) ![Express](https://img.shields.io/badge/-Express-000000?logo=express) ![TypeScript](https://img.shields.io/badge/-TypeScript-3178C6?logo=typescript&logoColor=white) ![Pino](https://img.shields.io/badge/-Pino_Logger-68A063) ![Helmet](https://img.shields.io/badge/-Helmet_Security-4B32C3) ![Swagger](https://img.shields.io/badge/-OpenAPI_3.0-85EA2D?logo=swagger&logoColor=black) |
+| **Database & Cache** | ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL_16-4169E1?logo=postgresql&logoColor=white) ![Prisma](https://img.shields.io/badge/-Prisma_ORM-2D3748?logo=prisma&logoColor=white) ![Migrations](https://img.shields.io/badge/-Committed_Migrations-7952B3)                                                                                                                                                                                                                       |
+| **Security & Auth**  | ![JWT](https://img.shields.io/badge/-JWT_15min-000000?logo=jsonwebtokens) ![Bcrypt](https://img.shields.io/badge/-Bcrypt_Salted-F7DF1E?logo=javascript&logoColor=black) ![SHA-256](https://img.shields.io/badge/-SHA--256_Rotation-blue) ![Rate Limit](https://img.shields.io/badge/-Rate_Limited-red)                                                                                                                                                                                  |
+| **DevOps & Tooling** | ![Docker](https://img.shields.io/badge/-Docker-2496ED?logo=docker&logoColor=white) ![Compose](https://img.shields.io/badge/-Docker_Compose-2496ED) ![GitHub Actions](https://img.shields.io/badge/-GitHub_Actions-2088FF?logo=githubactions&logoColor=white) ![Prettier](https://img.shields.io/badge/-Prettier-F7B93E?logo=prettier&logoColor=white) ![Vitest](https://img.shields.io/badge/-Vitest-6E9F18?logo=vitest&logoColor=white)                                                |
+
+</div>
+
+---
+
+## 🏛️ System Architecture
 
 ```text
-miniledger/
-├── apps/
-│   └── mobile/              # React Native / Expo application
-│       ├── app/             # Expo Router screen routes
-│       │   ├── (auth)/      # Phone and OTP verification screens
-│       │   ├── (tabs)/      # Dashboard and loan list screens
-│       │   ├── loans/       # New loan form and detail screens
-│       │   └── settings.tsx # Profile and security settings
-│       ├── src/             # Reusable components, hooks, theme tokens, and storage
-│       └── app.json         # Expo configuration
-├── services/
-│   └── api/                 # Express REST backend
-│       ├── prisma/          # Prisma schema, migrations, and seed script
-│       ├── src/             # Config, lib, middleware, modules, and routes
-│       └── tests/           # Unit and Supertest integration test suites
-├── packages/
-│   └── shared/              # Shared types, Zod schemas, constants, and money utils
-├── docs/                    # Architecture, database, security, and deployment docs
-├── docker-compose.yml       # Containerized setup
-├── package.json             # Root monorepo workspace configuration
-└── .env.example             # Documented environment template
+┌────────────────────────────────────────────────────────┐
+│            Mobile Client (React Native + Expo 52)      │
+│  - Expo Router (Tabs, Modals, Protected Route Guards)  │
+│  - TanStack Query (Background Refetch & Invalidation)  │
+│  - Expo SecureStore (Encrypted Hardware Storage)       │
+└──────────────────────────┬─────────────────────────────┘
+                           │ HTTPS / JSON REST
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│            Backend REST API (Node.js 22 + Express)     │
+│  - Helmet & CORS (Security Headers & Origin Isolation) │
+│  - Rate Limiters (10 OTP req/10 min, 15 verify/10 min) │
+│  - Zod Middleware (Server-Side Request Validation)     │
+│  - JWT & Rotation (15-min Access, 30-day Refresh)      │
+│  - Transaction Engine (PostgreSQL Row-Level Locks)     │
+└──────────────────────────┬─────────────────────────────┘
+                           │ Prisma ORM / SQL
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│               PostgreSQL 16 Relational Engine          │
+│  - Strict Referential Integrity (onDelete: Restrict)   │
+│  - Integer Paise Columns (BigInt - No float rounding)  │
+│  - Atomic Transactions & FOR UPDATE Row Locks          │
+└────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 4. Financial Precision Engine
+## 💡 Key Architectural Highlights
 
-Never use floating-point numbers for money calculations:
+### 1. The Integer Paise Financial Engine
 
-- All monetary amounts in the database and API are represented as **integer paise** (`1 Rupee = 100 paise`).
-- Decimal-safe string splitting handles parsing (`"1250.50"` -> `125050 paise`), preventing floating-point errors (`0.1 + 0.2 === 0.30000000000000004`).
-- Amounts are strictly positive with at most two decimal places.
+JavaScript native numbers suffer from IEEE 754 precision inaccuracies:
+
+```javascript
+0.1 + 0.2 === 0.30000000000000004; // ❌ Disastrous for financial ledgers
+```
+
+MiniLedger enforces integer paise at every layer:
+
+- **₹1.00** is stored strictly as `100n` paise.
+- **₹1,250.50** is stored as `125050n` paise.
+- Conversion functions in `packages/shared/src/money.ts` use string parsing rather than float multiplication, throwing errors on fractional sub-paise amounts or amounts beyond 2 decimal places.
+
+### 2. Atomic Repayments with Row-Level Locking
+
+Preventing duplicate settlements and concurrency races:
+
+```sql
+SELECT id, "userId", status, amount
+FROM loans
+WHERE id = $1::uuid AND "userId" = $2::uuid
+FOR UPDATE;
+```
+
+If two settlement requests arrive concurrently, the second query waits until the first commits, sees `status === 'REPAID'`, and immediately fails with `ALREADY_REPAID` (HTTP 400).
+
+### 3. Dynamic Overdue Engine
+
+A loan due on `2026-10-20` is overdue on `2026-10-21` without requiring a cron job to mutate rows. Overdue status is computed dynamically:
+
+```typescript
+isOverdue = status === 'OUTSTANDING' && remainingBalance > 0 && dueDate < todayInIST;
+```
 
 ---
 
-## 5. Getting Started (Local Setup)
+## 🚀 Quick Start Guide
 
 ### Prerequisites
 
-- Node.js 20+ or 22 LTS
-- npm 10+
-- PostgreSQL (via local service or Docker)
+- **Node.js**: `v20.0.0` or `v22.0.0+`
+- **npm**: `v10.0.0+`
+- **PostgreSQL**: Local service or Docker
 
-### 1. Clone & Install Dependencies
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/PriyanshuSingh10114/MiniLedger.git
@@ -122,9 +144,9 @@ cd MiniLedger
 npm install
 ```
 
-### 2. Configure Environment
+### 2. Environment Setup
 
-Create `.env` inside `services/api/` (or copy from `.env.example`):
+Create `services/api/.env` (or copy from `.env.example`):
 
 ```env
 PORT=4000
@@ -136,136 +158,144 @@ JWT_REFRESH_SECRET=miniledger_dev_refresh_secret_super_secure_key_at_least_32_ch
 ENABLE_DEV_OTP=true
 ```
 
-### 3. Apply Migrations & Seed Sample Data
+### 3. Database Migration & Seed
 
 ```bash
-# Run migrations
+# Apply Prisma database migrations
 npm run db:migrate
 
-# Seed demo loans and user
+# Seed demo loans and test user
 npm run db:seed
 ```
 
-### 4. Start the Backend API
+### 4. Start the Application
 
 ```bash
+# Terminal 1: Launch Backend REST API
 npm run dev:api
-```
 
-The API starts at `http://localhost:4000`.
-Swagger UI is available at `http://localhost:4000/api-docs`.
-
-### 5. Start the Mobile Client
-
-In a separate terminal:
-
-```bash
+# Terminal 2: Launch Mobile App (Expo)
 npm run dev:mobile
 ```
 
-Press `a` to open in Android Emulator, `w` for Web, or scan the QR code with the Expo Go app on a physical device.
+- **Interactive API Documentation (Swagger)**: [`http://localhost:4000/api-docs`](http://localhost:4000/api-docs)
+- **API Health Check**: [`http://localhost:4000/api/v1/health`](http://localhost:4000/api/v1/health)
+- **Mobile Emulator**: Press `a` in the Expo terminal for Android or `w` for Web preview.
 
 ---
 
-## 6. Development OTP Flow
+## 🔑 Development OTP Authentication Flow
 
-MiniLedger uses phone verification. In development mode:
-
-1. Open the mobile app and enter any valid phone number (e.g. `+919876543210` or `9876543210`).
+1. In the mobile client, enter any valid mobile number (e.g., `+919876543210` or `9876543210`).
 2. Tap **Get Verification Code**.
-3. Inspect your running API terminal. You will see a log entry:
+3. Inspect your active API server terminal. A dev log will print:
    ```text
    [INFO] [DEV ONLY] OTP for +919876543210 is: 481920 (expires in 5 mins)
    ```
 4. Enter `481920` in the app to authenticate.
-5. In production mode, `ENABLE_DEV_OTP` fails closed to prevent mock OTP generation.
+5. In production mode (`NODE_ENV=production`), `ENABLE_DEV_OTP` fails closed on startup.
 
 ---
 
-## 7. Automated Testing
+## 🧪 Automated Testing Suite
 
-MiniLedger comes with comprehensive unit and integration tests covering financial rules, OTP lifecycle, concurrency, duplicate repayments, and user isolation.
+MiniLedger features comprehensive unit and Supertest integration tests covering financial precision, OTP security, rate limiting, and cross-user isolation.
 
 ```bash
-# Run all backend tests (Unit & Integration)
+# Run all backend unit & integration tests
 npm run --workspace=@miniledger/api test
 
-# Run mobile validation tests
+# Run mobile validation & utility tests
 npm run --workspace=@miniledger/mobile test
 
-# Run TypeScript checks across all workspaces
+# Run full monorepo typechecks
 npm run typecheck
 ```
 
-### Test Results Summary:
+### Test Metrics (100% Pass Rate)
 
-- **`tests/unit/money.test.ts`**: 5 tests passed (decimal-safe parsing, limits, formatting)
-- **`tests/unit/date.test.ts`**: 4 tests passed (business timezone, overdue logic)
-- **`tests/unit/otp.test.ts`**: 3 tests passed (crypto entropy, bcrypt verification, token hashing)
-- **`tests/integration/api.test.ts`**: 20 tests passed (health, auth, loans, atomic repayment, isolation)
-- **`apps/mobile/tests/`**: 10 tests passed (form schemas, mobile currency helpers)
-- **Total**: **42 / 42 Automated Tests Passing (100%)**
+```text
+✓ services/api/tests/unit/date.test.ts ........... 4 passed
+✓ services/api/tests/unit/money.test.ts .......... 5 passed
+✓ services/api/tests/unit/otp.test.ts ............ 3 passed
+✓ services/api/tests/integration/api.test.ts .... 20 passed
+✓ apps/mobile/tests/validation.test.ts ........... 7 passed
+✓ apps/mobile/tests/currency.test.ts ............. 3 passed
 
----
-
-## 8. API Reference & Swagger UI
-
-Interactive Swagger documentation is available at `http://localhost:4000/api-docs`.
-
-| Method | Endpoint                       | Description                  | Auth Required     |
-| ------ | ------------------------------ | ---------------------------- | ----------------- |
-| `GET`  | `/api/v1/health`               | Health & DB connection check | No                |
-| `POST` | `/api/v1/auth/request-otp`     | Request 6-digit OTP          | No (Rate-limited) |
-| `POST` | `/api/v1/auth/verify-otp`      | Verify OTP & receive tokens  | No (Rate-limited) |
-| `POST` | `/api/v1/auth/refresh`         | Rotate refresh token         | No                |
-| `POST` | `/api/v1/auth/logout`          | Revoke session               | No                |
-| `GET`  | `/api/v1/users/me`             | Current user profile         | Bearer JWT        |
-| `GET`  | `/api/v1/loans`                | Filtered & paginated loans   | Bearer JWT        |
-| `POST` | `/api/v1/loans`                | Create new loan              | Bearer JWT        |
-| `GET`  | `/api/v1/loans/:id`            | Loan details & history       | Bearer JWT        |
-| `POST` | `/api/v1/loans/:id/repayments` | Full loan repayment          | Bearer JWT        |
-| `GET`  | `/api/v1/dashboard/summary`    | Real-time financial metrics  | Bearer JWT        |
-| `POST` | `/api/v1/loans/:id/receipt`    | Upload loan receipt          | Bearer JWT        |
+Test Files:  6 passed (6)
+Total Tests: 42 passed (42) — 100% Passing
+```
 
 ---
 
-## 9. Docker & Containerization
+## 📂 Repository Monorepo Structure
 
-To run the complete backend and PostgreSQL in Docker:
+```text
+miniledger/
+├── apps/
+│   └── mobile/                          # React Native / Expo application
+│       ├── app/                         # Expo Router screen routes
+│       │   ├── (auth)/                  # Phone & OTP verification
+│       │   ├── (tabs)/                  # Financial Dashboard & Loan List
+│       │   ├── loans/                   # Add Loan & Loan Details modals
+│       │   └── settings.tsx             # Profile, session info & Logout
+│       ├── src/                         # Reusable UI components & hooks
+│       └── tests/                       # Mobile validation tests
+├── services/
+│   └── api/                             # Node.js + Express REST API
+│       ├── prisma/                      # Schema, migrations & seed
+│       ├── src/                         # Express modules, middleware, config
+│       ├── tests/                       # Unit & Supertest integration tests
+│       └── Dockerfile                   # Multi-stage production container
+├── packages/
+│   └── shared/                          # Reusable types, Zod schemas, money engine
+├── docs/                                # Technical deep-dive documentation
+├── .github/workflows/ci.yml             # GitHub Actions CI workflow
+├── docker-compose.yml                   # PostgreSQL + API container stack
+├── package.json                         # Monorepo workspaces definition
+└── README.md                            # Project documentation
+```
+
+---
+
+## 🐳 Docker Deployment
+
+Run the complete backend stack (PostgreSQL + Express API) with persistent volumes and healthchecks:
 
 ```bash
 docker compose up --build -d
 ```
 
-The Docker setup includes:
+Verify service status:
 
-- PostgreSQL 16 with persistent volume and automatic healthchecks.
-- Multi-stage Node.js 22 production image running as non-root user `node`.
-
----
-
-## 10. CI/CD Pipeline
-
-The GitHub Actions workflow (`.github/workflows/ci.yml`) runs on every commit and pull request:
-
-1. Installs clean dependencies via `npm ci`.
-2. Validates code formatting with Prettier.
-3. Checks TypeScript types across all workspaces.
-4. Starts a test PostgreSQL container.
-5. Deploys Prisma migrations to the test database.
-6. Runs all unit and Supertest integration tests.
-7. Validates production builds.
+```bash
+docker compose ps
+docker compose logs -f api
+```
 
 ---
 
-## 11. Troubleshooting
+## 👤 Author & Maintainer
 
-- **Android Emulator Networking**: The Android Emulator cannot reach `localhost` directly. The mobile app automatically points to `http://10.0.2.2:4000/api/v1` on Android.
-- **Physical Device**: Update `EXPO_PUBLIC_API_URL` to your computer's local Wi-Fi IP (e.g. `http://192.168.1.50:4000/api/v1`).
-- **Database Connection**: Ensure PostgreSQL is listening on the port configured in `.env`.
+<table align="center">
+  <tr>
+    <td align="center">
+      <a href="https://github.com/PriyanshuSingh10114">
+        <img src="https://avatars.githubusercontent.com/u/10114?v=4" width="100px;" alt="Priyanshu Singh" style="border-radius: 50%;" /><br />
+        <sub><b>Priyanshu Singh</b></sub>
+      </a><br />
+      <a href="https://github.com/PriyanshuSingh10114" title="GitHub">
+        <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" />
+      </a>
+      <a href="mailto:priyanshusingh22340@gmail.com" title="Email">
+        <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" />
+      </a>
+    </td>
+  </tr>
+</table>
 
 ---
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is open-source and licensed under the [MIT License](LICENSE).
