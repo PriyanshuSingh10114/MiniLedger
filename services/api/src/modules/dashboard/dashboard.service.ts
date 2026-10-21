@@ -46,7 +46,10 @@ export class DashboardService {
       const amountPaise = Number(loan.amount);
       totalLentPaise += amountPaise;
 
-      const loanRepaidPaise = loan.repayments.reduce((sum, r) => sum + Number(r.amount), 0);
+      const loanRepaidPaise = (loan.repayments as any[]).reduce(
+        (sum: number, r: any) => sum + Number(r.amount),
+        0,
+      );
       totalRepaidPaise += loanRepaidPaise;
 
       const outstandingPaise = Math.max(0, amountPaise - loanRepaidPaise);
@@ -71,9 +74,12 @@ export class DashboardService {
 
     const totalOutstandingPaise = Math.max(0, totalLentPaise - totalRepaidPaise);
 
-    const recentLoans = recentLoansData.map((loan) => {
+    const recentLoans = (recentLoansData as any[]).map((loan: any) => {
       const amountPaise = Number(loan.amount);
-      const repaidPaise = loan.repayments.reduce((sum, r) => sum + Number(r.amount), 0);
+      const repaidPaise = (loan.repayments as any[]).reduce(
+        (sum: number, r: any) => sum + Number(r.amount),
+        0,
+      );
       const outstandingPaise = Math.max(0, amountPaise - repaidPaise);
       const dueDateStr =
         loan.dueDate instanceof Date

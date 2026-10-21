@@ -8,7 +8,7 @@ export class RepaymentsService {
    * Enforces user ownership, prevents race conditions, and prevents duplicate repayments.
    */
   async recordFullRepayment(userId: string, loanId: string, idempotencyKey?: string) {
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: any) => {
       // 1. If idempotency key is supplied, check if already recorded
       if (idempotencyKey) {
         const existingRepayment = await tx.repayment.findUnique({
@@ -154,7 +154,7 @@ export class RepaymentsService {
       orderBy: { repaidAt: 'desc' },
     });
 
-    return repayments.map((r) => ({
+    return (repayments as any[]).map((r: any) => ({
       id: r.id,
       loanId: r.loanId,
       amount: Number(r.amount),

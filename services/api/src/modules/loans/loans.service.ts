@@ -183,7 +183,7 @@ export class LoansService {
     const totalPages = Math.ceil(total / limit) || 1;
 
     return {
-      items: loans.map((l) => this.formatLoan(l)),
+      items: (loans as any[]).map((l: any) => this.formatLoan(l)),
       pagination: {
         page,
         limit,

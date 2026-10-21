@@ -48,15 +48,16 @@ jobs:
       - name: Build Shared Package
         run: npm run build --workspace=@miniledger/shared
 
+      - name: Generate Prisma Client
+        run: npm run --workspace=@miniledger/api db:generate
+
       - name: TypeScript Typecheck All Packages
         run: npm run typecheck
 
-      - name: Generate Prisma Client & Run Migrations
+      - name: Run Migrations on Test Database
         env:
           DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/miniledger_test?schema=public
-        run: |
-          npm run --workspace=@miniledger/api db:generate
-          npx prisma migrate deploy --schema=services/api/prisma/schema.prisma
+        run: npx prisma migrate deploy --schema=services/api/prisma/schema.prisma
 
       - name: Run Backend Tests (Unit & Integration)
         env:
