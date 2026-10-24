@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
 import { formatPaiseToINR } from '@miniledger/shared';
 
@@ -8,7 +8,7 @@ export interface MetricCardProps {
   amountPaise: number;
   subtitle?: string;
   icon?: React.ReactNode;
-  variant?: 'default' | 'danger' | 'success' | 'primary';
+  variant?: 'default' | 'danger' | 'success' | 'info';
   style?: ViewStyle;
 }
 
@@ -26,26 +26,26 @@ export function MetricCard({
         return {
           textColor: colors.dangerDark,
           borderColor: colors.dangerBorder,
-          bgColor: colors.dangerLight,
+          badgeBg: colors.dangerLight,
         };
       case 'success':
         return {
           textColor: colors.successDark,
-          borderColor: colors.successBorder,
-          bgColor: colors.successLight,
+          borderColor: colors.surfaceBorder,
+          badgeBg: colors.successLight,
         };
-      case 'primary':
+      case 'info':
         return {
-          textColor: colors.primaryDark,
-          borderColor: colors.primaryLight,
-          bgColor: colors.primaryLight,
+          textColor: colors.primary,
+          borderColor: colors.surfaceBorder,
+          badgeBg: colors.primaryLight,
         };
       case 'default':
       default:
         return {
           textColor: colors.textPrimary,
           borderColor: colors.surfaceBorder,
-          bgColor: colors.surface,
+          badgeBg: colors.surfaceSubtle,
         };
     }
   };
@@ -53,53 +53,71 @@ export function MetricCard({
   const theme = getVariantStyles();
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.bgColor, borderColor: theme.borderColor },
-        style,
-      ]}
-    >
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        {icon}
+    <View style={[styles.card, { borderColor: theme.borderColor }, style]}>
+      <View style={styles.topRow}>
+        <Text style={styles.title} numberOfLines={1}>
+          {title}
+        </Text>
+        {icon && <View style={[styles.iconContainer, { backgroundColor: theme.badgeBg }]}>{icon}</View>}
       </View>
-      <Text style={[styles.amount, { color: theme.textColor }]} numberOfLines={1}>
+
+      <Text
+        style={[
+          styles.amount,
+          { color: theme.textColor },
+          Platform.OS === 'web' && ({ fontVariant: ['tabular-nums'] } as any),
+        ]}
+        numberOfLines={1}
+      >
         {formatPaiseToINR(amountPaise)}
       </Text>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+
+      {subtitle ? (
+        <Text style={styles.subtitle} numberOfLines={1}>
+          {subtitle}
+        </Text>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.base,
     borderWidth: 1,
-    ...shadows.sm,
+    minHeight: 110,
+    justifyContent: 'space-between',
+    ...shadows.xs,
   },
-  header: {
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xs,
+    gap: spacing.xs,
   },
   title: {
     fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
+    fontWeight: typography.weights.medium,
     color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.1,
+  },
+  iconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   amount: {
     fontSize: typography.sizes['2xl'],
-    fontWeight: typography.weights.extrabold,
-    letterSpacing: -0.5,
+    fontWeight: typography.weights.bold,
+    letterSpacing: -0.4,
+    marginVertical: 4,
   },
   subtitle: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.sizes.xxs,
     color: colors.textMuted,
-    marginTop: spacing.xs,
   },
 });

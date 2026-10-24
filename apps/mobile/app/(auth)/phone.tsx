@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/features/auth/AuthContext';
 import { Button } from '../../src/components/Button';
 import { Input } from '../../src/components/Input';
-import { colors, radii, spacing, typography } from '../../src/theme/tokens';
+import { colors, radii, spacing, typography, shadows } from '../../src/theme/tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function PhoneScreen() {
@@ -24,14 +24,13 @@ export default function PhoneScreen() {
       return;
     }
 
-    // Format phone: if 10 digits without code, prepend +91
     let formattedPhone = cleaned;
     if (/^\d{10}$/.test(cleaned)) {
       formattedPhone = `+91${cleaned}`;
     }
 
     if (!/^\+[1-9]\d{9,14}$/.test(formattedPhone)) {
-      setError('Enter a valid 10-digit mobile number or full E.164 format (e.g. +919876543210)');
+      setError('Enter a valid 10-digit mobile number or E.164 format (e.g. +919876543210)');
       return;
     }
 
@@ -55,54 +54,57 @@ export default function PhoneScreen() {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <View style={styles.logoBadge}>
-            <Ionicons name="wallet" size={36} color={colors.primary} />
-          </View>
-          <Text style={styles.title}>MiniLedger</Text>
-          <Text style={styles.subtitle}>
-            Personal money-lending tracker. Keep reliable records of loans and repayments.
-          </Text>
-        </View>
-
-        <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Sign in with Phone</Text>
-          <Text style={styles.formDescription}>
-            We will send a 6-digit verification code to your mobile number.
-          </Text>
-
-          <Input
-            label="Phone Number"
-            placeholder="98765 43210"
-            value={phoneNumber}
-            onChangeText={(t) => {
-              setPhoneNumber(t);
-              if (error) setError(null);
-            }}
-            keyboardType="phone-pad"
-            autoFocus
-            error={error || undefined}
-            leftElement={
-              <View style={styles.prefixContainer}>
-                <Text style={styles.flag}>🇮🇳</Text>
-                <Text style={styles.prefixText}>+91</Text>
-              </View>
-            }
-          />
-
-          <Button
-            title="Get Verification Code"
-            size="lg"
-            loading={loading}
-            onPress={handleRequestOtp}
-            style={styles.submitButton}
-          />
-
-          <View style={styles.devNotice}>
-            <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
-            <Text style={styles.devNoticeText}>
-              In development mode, your 6-digit OTP is printed to the backend terminal log.
+        <View style={styles.contentWrapper}>
+          <View style={styles.header}>
+            <View style={styles.logoBadge}>
+              <Ionicons name="wallet" size={24} color={colors.textInverse} />
+            </View>
+            <Text style={styles.title}>MiniLedger</Text>
+            <Text style={styles.subtitle}>
+              Personal money-lending tracker and receivables ledger
             </Text>
+          </View>
+
+          <View style={styles.formCard}>
+            <Text style={styles.formTitle}>Sign in with Phone</Text>
+            <Text style={styles.formDescription}>
+              Enter your mobile number to receive a 6-digit one-time passcode.
+            </Text>
+
+            <Input
+              label="Mobile Number *"
+              placeholder="98765 43210"
+              value={phoneNumber}
+              onChangeText={(t) => {
+                setPhoneNumber(t);
+                if (error) setError(null);
+              }}
+              keyboardType="phone-pad"
+              autoFocus
+              error={error || undefined}
+              leftElement={
+                <View style={styles.prefixContainer}>
+                  <Text style={styles.prefixText}>+91</Text>
+                </View>
+              }
+            />
+
+            <Button
+              title="Continue with OTP"
+              size="md"
+              loading={loading}
+              disabled={loading}
+              onPress={handleRequestOtp}
+              icon={<Ionicons name="arrow-forward" size={16} color={colors.textInverse} />}
+              style={styles.submitButton}
+            />
+
+            <View style={styles.devNotice}>
+              <Ionicons name="information-circle-outline" size={15} color={colors.primary} />
+              <Text style={styles.devNoticeText}>
+                Dev Mode: OTP is printed directly in the backend terminal log.
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -118,34 +120,39 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: spacing.xl,
+  },
+  contentWrapper: {
+    width: '100%',
+    maxWidth: 420,
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing['2xl'],
+    marginBottom: spacing.xl,
   },
   logoBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: radii.xl,
-    backgroundColor: colors.primaryLight,
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.xs,
   },
   title: {
-    fontSize: typography.sizes['3xl'],
-    fontWeight: typography.weights.extrabold,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.md,
-    lineHeight: 20,
+    marginTop: 2,
+    lineHeight: 18,
   },
   formCard: {
     backgroundColor: colors.surface,
@@ -153,17 +160,18 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    ...shadows.sm,
   },
   formTitle: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
+    marginBottom: 2,
   },
   formDescription: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.textSecondary,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.base,
   },
   prefixContainer: {
     flexDirection: 'row',
@@ -172,32 +180,28 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
     borderRightWidth: 1,
     borderRightColor: colors.surfaceBorder,
-    gap: spacing.xs,
-  },
-  flag: {
-    fontSize: 18,
   },
   prefixText: {
-    fontSize: typography.sizes.base,
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.semibold,
     color: colors.textPrimary,
   },
   submitButton: {
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   devNotice: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.primaryLight,
     borderRadius: radii.base,
-    padding: spacing.md,
-    marginTop: spacing.lg,
-    gap: spacing.sm,
+    padding: spacing.sm,
+    marginTop: spacing.md,
+    gap: spacing.xs,
   },
   devNoticeText: {
     flex: 1,
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-    lineHeight: 16,
+    fontSize: typography.sizes.xxs,
+    color: colors.primaryDark,
+    lineHeight: 15,
   },
 });

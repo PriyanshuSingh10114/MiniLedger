@@ -44,7 +44,7 @@ export function ConfirmationModal({
               >
                 <Ionicons
                   name={iconName}
-                  size={32}
+                  size={24}
                   color={
                     variant === 'success'
                       ? colors.success
@@ -61,7 +61,8 @@ export function ConfirmationModal({
               <View style={styles.buttonRow}>
                 <Button
                   title={cancelTitle}
-                  variant="secondary"
+                  variant="outline"
+                  size="md"
                   disabled={loading}
                   onPress={onCancel}
                   style={styles.actionButton}
@@ -69,6 +70,7 @@ export function ConfirmationModal({
                 <Button
                   title={confirmTitle}
                   variant={variant}
+                  size="md"
                   loading={loading}
                   onPress={onConfirm}
                   style={styles.actionButton}
@@ -85,7 +87,7 @@ export function ConfirmationModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xl,
@@ -95,18 +97,20 @@ const styles = StyleSheet.create({
     borderRadius: radii.xl,
     padding: spacing.xl,
     width: '100%',
-    maxWidth: 380,
+    maxWidth: 420,
     alignItems: 'center',
-    ...shadows.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    ...shadows.modal,
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 48,
+    height: 48,
+    borderRadius: radii.md,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.base,
+    marginBottom: spacing.md,
   },
   iconCircleSuccess: {
     backgroundColor: colors.successLight,
@@ -115,22 +119,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dangerLight,
   },
   title: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
   message: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing.xl,
+    lineHeight: 18,
+    marginBottom: spacing.lg,
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
     width: '100%',
   },
   actionButton: {

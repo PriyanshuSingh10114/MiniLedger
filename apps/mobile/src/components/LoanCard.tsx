@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
 import { Badge } from './Badge';
 import { formatPaiseToINR, formatDateForDisplay, Loan } from '@miniledger/shared';
@@ -11,59 +11,69 @@ export interface LoanCardProps {
 }
 
 export function LoanCard({ loan, onPress }: LoanCardProps) {
-  const getBadgeStatus = () => {
-    if (loan.status === 'REPAID') return 'REPAID';
-    if (loan.isOverdue) return 'OVERDUE';
-    return 'OUTSTANDING';
-  };
-
   const isRepaid = loan.status === 'REPAID';
   const isOverdue = loan.isOverdue && !isRepaid;
 
+  const badgeStatus = isRepaid ? 'REPAID' : isOverdue ? 'OVERDUE' : 'OUTSTANDING';
+
   return (
     <TouchableOpacity
-      activeOpacity={0.7}
+      activeOpacity={0.75}
       onPress={onPress}
       style={[styles.card, isOverdue && styles.cardOverdue, isRepaid && styles.cardRepaid]}
       accessibilityRole="button"
-      accessibilityLabel={`Loan to ${loan.friendName}, Amount ${formatPaiseToINR(loan.amount)}`}
+      accessibilityLabel={`Loan to ${loan.friendName}, Amount ${formatPaiseToINR(loan.outstandingAmount)}`}
     >
       <View style={styles.topRow}>
         <View style={styles.friendInfo}>
           <View
             style={[
               styles.avatar,
-              isOverdue && styles.avatarOverdue,
-              isRepaid && styles.avatarRepaid,
+              isOverdue ? styles.avatarOverdue : isRepaid ? styles.avatarRepaid : styles.avatarActive,
             ]}
           >
             <Text
               style={[
                 styles.avatarText,
-                isOverdue && styles.avatarTextOverdue,
-                isRepaid && styles.avatarTextRepaid,
+                isOverdue ? styles.avatarTextOverdue : isRepaid ? styles.avatarTextRepaid : styles.avatarTextActive,
               ]}
             >
               {loan.friendName.charAt(0).toUpperCase()}
             </Text>
           </View>
-          <View>
+          <View style={styles.nameContainer}>
             <Text style={styles.friendName} numberOfLines={1}>
               {loan.friendName}
             </Text>
-            <Text style={styles.dateText}>Due: {formatDateForDisplay(loan.dueDate)}</Text>
+            <View style={styles.dateRow}>
+              <Ionicons
+                name={isOverdue ? 'alert-circle-outline' : 'calendar-outline'}
+                size={12}
+                color={isOverdue ? colors.danger : colors.textMuted}
+              />
+              <Text style={[styles.dateText, isOverdue && styles.dateTextOverdue]}>
+                Due {formatDateForDisplay(loan.dueDate)}
+              </Text>
+            </View>
           </View>
         </View>
 
-        <Badge status={getBadgeStatus()} />
+        <Badge status={badgeStatus} size="sm" />
       </View>
 
       <View style={styles.divider} />
 
       <View style={styles.bottomRow}>
         <View>
-          <Text style={styles.amountLabel}>Total Lent</Text>
-          <Text style={styles.amountValue}>{formatPaiseToINR(loan.amount)}</Text>
+          <Text style={styles.amountLabel}>Original Lent</Text>
+          <Text
+            style={[
+              styles.amountValue,
+              Platform.OS === 'web' && ({ fontVariant: ['tabular-nums'] } as any),
+            ]}
+          >
+            {formatPaiseToINR(loan.amount)}
+          </Text>
         </View>
 
         <View style={styles.outstandingContainer}>
@@ -73,13 +83,14 @@ export function LoanCard({ loan, onPress }: LoanCardProps) {
               styles.outstandingValue,
               isOverdue && styles.outstandingValueOverdue,
               isRepaid && styles.outstandingValueRepaid,
+              Platform.OS === 'web' && ({ fontVariant: ['tabular-nums'] } as any),
             ]}
           >
             {formatPaiseToINR(loan.outstandingAmount)}
           </Text>
         </View>
 
-        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
       </View>
     </TouchableOpacity>
   );
@@ -89,19 +100,19 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    padding: spacing.base,
-    marginBottom: spacing.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
-    ...shadows.sm,
+    ...shadows.xs,
   },
   cardOverdue: {
     borderColor: colors.dangerBorder,
-    backgroundColor: '#FFFBFB',
+    backgroundColor: '#FFFDFD',
   },
   cardRepaid: {
     borderColor: colors.successBorder,
-    backgroundColor: '#FBFDFB',
+    backgroundColor: '#FDFEFE',
   },
   topRow: {
     flexDirection: 'row',
@@ -115,13 +126,15 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.full,
-    backgroundColor: colors.primaryLight,
+    width: 34,
+    height: 34,
+    borderRadius: radii.sm,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
+  },
+  avatarActive: {
+    backgroundColor: colors.primaryLight,
   },
   avatarOverdue: {
     backgroundColor: colors.dangerLight,
@@ -130,8 +143,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.successLight,
   },
   avatarText: {
-    fontSize: typography.sizes.base,
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
+  },
+  avatarTextActive: {
     color: colors.primary,
   },
   avatarTextOverdue: {
@@ -140,20 +155,32 @@ const styles = StyleSheet.create({
   avatarTextRepaid: {
     color: colors.success,
   },
+  nameContainer: {
+    flex: 1,
+  },
   friendName: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
     color: colors.textPrimary,
   },
-  dateText: {
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     marginTop: 2,
+  },
+  dateText: {
+    fontSize: typography.sizes.xxs,
+    color: colors.textMuted,
+  },
+  dateTextOverdue: {
+    color: colors.dangerDark,
+    fontWeight: typography.weights.medium,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.surfaceBorder,
-    marginVertical: spacing.md,
+    backgroundColor: colors.surfaceBorderSubtle,
+    marginVertical: spacing.sm,
   },
   bottomRow: {
     flexDirection: 'row',
@@ -161,20 +188,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   amountLabel: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.sizes.xxs,
     color: colors.textMuted,
     marginBottom: 2,
   },
   amountValue: {
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold,
-    color: colors.textPrimary,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.medium,
+    color: colors.textSecondary,
   },
   outstandingContainer: {
     alignItems: 'flex-end',
   },
   outstandingValue: {
-    fontSize: typography.sizes.base,
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.primary,
   },

@@ -1,30 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
-  RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useLoans } from '../../src/features/loans/useLoans';
+import { AppShell } from '../../src/components/AppShell';
+import { LoanTable } from '../../src/components/LoanTable';
 import { LoanCard } from '../../src/components/LoanCard';
 import { Input } from '../../src/components/Input';
 import { EmptyState } from '../../src/components/EmptyState';
-import { colors, radii, spacing, typography } from '../../src/theme/tokens';
+import { colors, radii, spacing, typography, shadows } from '../../src/theme/tokens';
 import { Ionicons } from '@expo/vector-icons';
-import { LoanStatus } from '@miniledger/shared';
+import { LoanStatus, Loan } from '@miniledger/shared';
 
 type FilterTab = 'ALL' | 'OUTSTANDING' | 'OVERDUE' | 'REPAID';
 
 export default function LoansListScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ filter?: string }>();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+
   const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'dueDate' | 'createdAt' | 'amount'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Handle URL query filter param
+  useEffect(() => {
+    if (params.filter) {
+      const f = params.filter.toUpperCase();
+      if (f === 'OUTSTANDING' || f === 'OVERDUE' || f === 'REPAID') {
+        setActiveTab(f as FilterTab);
+      }
+    }
+  }, [params.filter]);
 
   // Query parameters according to tab
   const queryParams = {
@@ -35,7 +50,7 @@ export default function LoansListScreen() {
     sortOrder,
   };
 
-  const { data: loans, isLoading, isError, error, refetch, isRefetching } = useLoans(queryParams);
+  const { data: loans, isLoading, isError, error, refetch } = useLoans(queryParams);
 
   const toggleSort = () => {
     if (sortBy === 'createdAt') {
@@ -62,210 +77,269 @@ export default function LoansListScreen() {
     }
   };
 
-  return (
-    <View style={styles.container}>
-      {/* Search Header */}
-      <View style={styles.searchSection}>
-        <Input
-          placeholder="Search friend's name..."
-          value={search}
-          onChangeText={setSearch}
-          leftElement={
-            <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
-          }
-          rightElement={
-            search ? (
-              <TouchableOpacity onPress={() => setSearch('')}>
-                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
-              </TouchableOpacity>
-            ) : null
-          }
-          containerStyle={styles.searchInputContainer}
-        />
+  const getActiveNavId = () => {
+    if (activeTab === 'OVERDUE') return 'overdue';
+    if (activeTab === 'OUTSTANDING') return 'outstanding';
+    if (activeTab === 'REPAID') return 'repaid';
+    return 'loans';
+  };
 
-        {/* Filter Pills */}
-        <View style={styles.tabBar}>
-          {(['ALL', 'OUTSTANDING', 'OVERDUE', 'REPAID'] as FilterTab[]).map((tab) => {
-            const isActive = activeTab === tab;
-            return (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setActiveTab(tab)}
-                style={[
-                  styles.tabButton,
-                  isActive && styles.tabButtonActive,
-                  tab === 'OVERDUE' && isActive && styles.tabButtonOverdue,
-                  tab === 'REPAID' && isActive && styles.tabButtonRepaid,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabButtonText,
-                    isActive && styles.tabButtonTextActive,
-                    tab === 'OVERDUE' && isActive && styles.tabButtonTextOverdue,
-                    tab === 'REPAID' && isActive && styles.tabButtonTextRepaid,
-                  ]}
-                >
-                  {tab === 'ALL'
-                    ? 'All'
-                    : tab === 'OUTSTANDING'
-                      ? 'Active'
-                      : tab === 'OVERDUE'
-                        ? 'Overdue'
-                        : 'Repaid'}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+  return (
+    <AppShell
+      title="All Loans"
+      subtitle="Complete ledger of money lent, remaining balances, and settlement history."
+      activeNav={getActiveNavId()}
+      headerAction={{
+        label: "Add Loan",
+        icon: <Ionicons name="add" size={16} color={colors.textInverse} />,
+        onPress: () => router.push('/loans/new'),
+      }}
+    >
+      {/* Compact Fintech Toolbar */}
+      <View style={[styles.toolbar, isDesktop ? styles.toolbarDesktop : styles.toolbarMobile]}>
+        {/* Search Input */}
+        <View style={styles.searchWrapper}>
+          <Input
+            placeholder="Filter by friend's name..."
+            value={search}
+            onChangeText={setSearch}
+            containerStyle={styles.searchContainer}
+            leftElement={
+              <Ionicons
+                name="search"
+                size={16}
+                color={colors.textMuted}
+                style={styles.searchIcon}
+              />
+            }
+            rightElement={
+              search ? (
+                <TouchableOpacity onPress={() => setSearch('')}>
+                  <Ionicons name="close-circle" size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+              ) : null
+            }
+          />
         </View>
 
-        {/* Sort Bar */}
-        <View style={styles.sortRow}>
-          <Text style={styles.resultsCount}>
-            {loans ? `${loans.length} loans found` : 'Loading...'}
-          </Text>
+        {/* Right Section: Segmented Status Control & Sort */}
+        <View style={styles.controlsRow}>
+          {/* Status Tabs */}
+          <View style={styles.segmentedControl}>
+            {(['ALL', 'OUTSTANDING', 'OVERDUE', 'REPAID'] as FilterTab[]).map((tab) => {
+              const isActive = activeTab === tab;
+              const label =
+                tab === 'ALL'
+                  ? 'All'
+                  : tab === 'OUTSTANDING'
+                    ? 'Active'
+                    : tab === 'OVERDUE'
+                      ? 'Overdue'
+                      : 'Repaid';
+
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setActiveTab(tab)}
+                  style={[
+                    styles.segmentButton,
+                    isActive && styles.segmentButtonActive,
+                    tab === 'OVERDUE' && isActive && styles.segmentButtonOverdue,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentButtonText,
+                      isActive && styles.segmentButtonTextActive,
+                      tab === 'OVERDUE' && isActive && styles.segmentButtonTextOverdue,
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Sort Button */}
           <TouchableOpacity onPress={toggleSort} style={styles.sortButton}>
-            <Ionicons name="swap-vertical" size={14} color={colors.primary} />
+            <Ionicons name="swap-vertical" size={13} color={colors.textSecondary} />
             <Text style={styles.sortButtonText}>{getSortLabel()}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Loan List Content */}
+      {/* Record Count Bar */}
+      <View style={styles.countRow}>
+        <Text style={styles.countText}>
+          {loans ? (
+            <>
+              Showing <Text style={styles.countBold}>{loans.length}</Text> record
+              {loans.length === 1 ? '' : 's'}
+              {activeTab !== 'ALL' && ` in ${activeTab.toLowerCase()}`}
+            </>
+          ) : (
+            'Loading records...'
+          )}
+        </Text>
+      </View>
+
+      {/* Data Presentation */}
       {isLoading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading loans...</Text>
+          <Text style={styles.loadingText}>Fetching lending records...</Text>
         </View>
       ) : isError ? (
         <View style={styles.centerContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
+          <Ionicons name="alert-circle-outline" size={40} color={colors.danger} />
           <Text style={styles.errorTitle}>Could not load loans</Text>
           <Text style={styles.errorSubtitle}>{(error as any)?.message}</Text>
           <TouchableOpacity onPress={() => refetch()} style={styles.retryButton}>
             <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
+      ) : loans && loans.length > 0 ? (
+        isDesktop ? (
+          <LoanTable
+            loans={loans}
+            onSelectLoan={(loan) => router.push(`/loans/${loan.id}` as any)}
+          />
+        ) : (
+          <View style={styles.mobileList}>
+            {loans.map((loan) => (
+              <LoanCard
+                key={loan.id}
+                loan={loan}
+                onPress={() => router.push(`/loans/${loan.id}` as any)}
+              />
+            ))}
+          </View>
+        )
       ) : (
-        <FlatList
-          data={loans || []}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
-              colors={[colors.primary]}
-              tintColor={colors.primary}
-            />
+        <EmptyState
+          title={search ? 'No Matching Records' : 'No Loans Found'}
+          description={
+            search
+              ? `No records found matching "${search}". Try adjusting your search query or status filter.`
+              : activeTab === 'OVERDUE'
+                ? 'Great news! No overdue loans are pending payment.'
+                : activeTab === 'REPAID'
+                  ? 'No settled loans recorded yet. Repaid loans will appear here.'
+                  : 'You have not added any loans yet. Click "+ Add Loan" above to create your first lending record.'
           }
-          ListEmptyComponent={
-            <EmptyState
-              title={search ? 'No Matching Loans' : 'No Loans Found'}
-              description={
-                search
-                  ? `No loans found for "${search}". Try adjusting your search or filter.`
-                  : activeTab === 'OVERDUE'
-                    ? 'No overdue loans! All loans are on schedule.'
-                    : activeTab === 'REPAID'
-                      ? 'No loans have been marked as repaid yet.'
-                      : 'You have not added any loans in this category.'
-              }
-              actionTitle={search ? 'Clear Search' : '+ Add Loan'}
-              onAction={search ? () => setSearch('') : () => router.push('/loans/new')}
-              iconName={search ? 'search-outline' : 'receipt-outline'}
-            />
-          }
-          renderItem={({ item }) => (
-            <LoanCard loan={item} onPress={() => router.push(`/loans/${item.id}` as any)} />
-          )}
+          actionTitle={search ? 'Clear Search' : '+ Add Loan'}
+          onAction={search ? () => setSearch('') : () => router.push('/loans/new')}
+          iconName={search ? 'search-outline' : 'receipt-outline'}
         />
       )}
-    </View>
+    </AppShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  searchSection: {
+  toolbar: {
     backgroundColor: colors.surface,
-    padding: spacing.base,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceBorder,
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    marginBottom: spacing.md,
+    gap: spacing.md,
+    ...shadows.xs,
   },
-  searchInputContainer: {
-    marginBottom: spacing.sm,
+  toolbarDesktop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  toolbarMobile: {
+    flexDirection: 'column',
+  },
+  searchWrapper: {
+    flex: 1,
+    maxWidth: 360,
+  },
+  searchContainer: {
+    marginBottom: 0,
   },
   searchIcon: {
     marginRight: spacing.sm,
   },
-  tabBar: {
+  controlsRow: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
     alignItems: 'center',
-    borderRadius: radii.full,
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  segmentedControl: {
+    flexDirection: 'row',
     backgroundColor: colors.surfaceSubtle,
+    borderRadius: radii.base,
+    padding: 3,
+    gap: 2,
   },
-  tabButtonActive: {
-    backgroundColor: colors.primary,
+  segmentButton: {
+    paddingVertical: 5,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.sm,
   },
-  tabButtonOverdue: {
-    backgroundColor: colors.danger,
+  segmentButtonActive: {
+    backgroundColor: colors.surface,
+    ...shadows.xs,
   },
-  tabButtonRepaid: {
-    backgroundColor: colors.success,
+  segmentButtonOverdue: {
+    backgroundColor: colors.dangerLight,
   },
-  tabButtonText: {
+  segmentButtonText: {
     fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
+    fontWeight: typography.weights.medium,
     color: colors.textSecondary,
   },
-  tabButtonTextActive: {
-    color: colors.textInverse,
+  segmentButtonTextActive: {
+    color: colors.primary,
+    fontWeight: typography.weights.semibold,
   },
-  tabButtonTextOverdue: {
-    color: colors.textInverse,
-  },
-  tabButtonTextRepaid: {
-    color: colors.textInverse,
-  },
-  sortRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.md,
-  },
-  resultsCount: {
-    fontSize: typography.sizes.xs,
-    color: colors.textMuted,
+  segmentButtonTextOverdue: {
+    color: colors.dangerDark,
   },
   sortButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.base,
+    height: 34,
   },
   sortButtonText: {
     fontSize: typography.sizes.xs,
-    color: colors.primary,
-    fontWeight: typography.weights.semibold,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
   },
-  listContent: {
-    padding: spacing.base,
-    paddingBottom: spacing['4xl'],
+  countRow: {
+    marginBottom: spacing.md,
+    paddingHorizontal: 2,
+  },
+  countText: {
+    fontSize: typography.sizes.xxs,
+    color: colors.textMuted,
+  },
+  countBold: {
+    fontWeight: typography.weights.bold,
+    color: colors.textSecondary,
+  },
+  mobileList: {
+    gap: spacing.xs,
   },
   centerContainer: {
-    flex: 1,
+    padding: spacing['2xl'],
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+    minHeight: 250,
   },
   loadingText: {
     fontSize: typography.sizes.sm,
@@ -291,7 +365,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
   },
   retryText: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.primary,
     fontWeight: typography.weights.semibold,
   },

@@ -12,7 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../src/features/auth/AuthContext';
 import { Button } from '../../src/components/Button';
 import { Input } from '../../src/components/Input';
-import { colors, radii, spacing, typography } from '../../src/theme/tokens';
+import { colors, radii, spacing, typography, shadows } from '../../src/theme/tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function VerifyOtpScreen() {
@@ -46,7 +46,6 @@ export default function VerifyOtpScreen() {
     try {
       setLoading(true);
       await verifyOtp(phoneNumber, cleaned);
-      // Success will automatically trigger route navigation via AuthContext & root layout
     } catch (err: any) {
       setError(err?.message || 'Invalid verification code. Please check server logs.');
     } finally {
@@ -71,67 +70,72 @@ export default function VerifyOtpScreen() {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
+        <View style={styles.contentWrapper}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="arrow-back" size={16} color={colors.textSecondary} />
+            <Text style={styles.backText}>Back to Phone</Text>
+          </TouchableOpacity>
 
-        <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="shield-checkmark" size={36} color={colors.primary} />
-          </View>
-          <Text style={styles.title}>Verify Code</Text>
-          <Text style={styles.subtitle}>
-            Enter the 6-digit code sent to <Text style={styles.phoneHighlight}>{phoneNumber}</Text>
-          </Text>
-        </View>
-
-        <View style={styles.formCard}>
-          <Input
-            label="6-Digit Verification Code"
-            placeholder="123456"
-            value={otp}
-            onChangeText={(t) => {
-              setOtp(t);
-              if (error) setError(null);
-            }}
-            keyboardType="number-pad"
-            maxLength={6}
-            autoFocus
-            error={error || undefined}
-            style={styles.otpInput}
-          />
-
-          <Button
-            title="Verify & Continue"
-            size="lg"
-            loading={loading}
-            onPress={handleVerify}
-            style={styles.submitButton}
-          />
-
-          <View style={styles.resendContainer}>
-            {cooldown > 0 ? (
-              <Text style={styles.cooldownText}>
-                Resend code in <Text style={styles.timerHighlight}>{cooldown}s</Text>
-              </Text>
-            ) : (
-              <TouchableOpacity onPress={handleResend} style={styles.resendButton}>
-                <Ionicons name="refresh" size={16} color={colors.primary} />
-                <Text style={styles.resendText}>Resend Verification Code</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={styles.devHint}>
-            <Ionicons name="terminal-outline" size={18} color={colors.textSecondary} />
-            <Text style={styles.devHintText}>
-              Development tip: Check the running backend terminal to view the generated OTP log.
+          <View style={styles.header}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="shield-checkmark" size={24} color={colors.textInverse} />
+            </View>
+            <Text style={styles.title}>Verify One-Time Passcode</Text>
+            <Text style={styles.subtitle}>
+              Code sent to <Text style={styles.phoneHighlight}>{phoneNumber}</Text>
             </Text>
+          </View>
+
+          <View style={styles.formCard}>
+            <Input
+              label="6-Digit Verification Code *"
+              placeholder="000000"
+              value={otp}
+              onChangeText={(t) => {
+                setOtp(t);
+                if (error) setError(null);
+              }}
+              keyboardType="number-pad"
+              maxLength={6}
+              autoFocus
+              error={error || undefined}
+              style={styles.otpInput}
+            />
+
+            <Button
+              title="Verify & Enter Ledger"
+              size="md"
+              loading={loading}
+              disabled={loading}
+              onPress={handleVerify}
+              icon={<Ionicons name="checkmark-done" size={16} color={colors.textInverse} />}
+              style={styles.submitButton}
+            />
+
+            <View style={styles.resendContainer}>
+              {cooldown > 0 ? (
+                <Text style={styles.cooldownText}>
+                  Resend code in <Text style={styles.timerHighlight}>{cooldown}s</Text>
+                </Text>
+              ) : (
+                <TouchableOpacity onPress={handleResend} style={styles.resendButton}>
+                  <Ionicons name="refresh" size={14} color={colors.primary} />
+                  <Text style={styles.resendText}>Resend Code</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.devHint}>
+              <Ionicons name="terminal-outline" size={15} color={colors.primary} />
+              <Text style={styles.devHintText}>
+                Dev Mode: Check the running backend terminal to view your generated OTP.
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -147,44 +151,50 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: spacing.xl,
   },
+  contentWrapper: {
+    width: '100%',
+    maxWidth: 420,
+  },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.full,
-    backgroundColor: colors.surface,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 4,
     marginBottom: spacing.base,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    alignSelf: 'flex-start',
+  },
+  backText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing['2xl'],
+    marginBottom: spacing.xl,
   },
   iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: radii.xl,
-    backgroundColor: colors.primaryLight,
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.xs,
   },
   title: {
-    fontSize: typography.sizes['2xl'],
+    fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.textSecondary,
     textAlign: 'center',
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.md,
-    lineHeight: 20,
+    marginTop: 2,
   },
   phoneHighlight: {
     fontWeight: typography.weights.bold,
@@ -196,22 +206,23 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    ...shadows.sm,
   },
   otpInput: {
-    fontSize: typography.sizes['2xl'],
+    fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
-    letterSpacing: 8,
+    letterSpacing: 6,
     textAlign: 'center',
   },
   submitButton: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
   resendContainer: {
     alignItems: 'center',
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
   },
   cooldownText: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xxs,
     color: colors.textMuted,
   },
   timerHighlight: {
@@ -221,26 +232,26 @@ const styles = StyleSheet.create({
   resendButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 4,
   },
   resendText: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
     color: colors.primary,
   },
   devHint: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.primaryLight,
     borderRadius: radii.base,
-    padding: spacing.md,
-    marginTop: spacing.lg,
-    gap: spacing.sm,
+    padding: spacing.sm,
+    marginTop: spacing.md,
+    gap: spacing.xs,
   },
   devHintText: {
     flex: 1,
-    fontSize: typography.sizes.xs,
-    color: colors.textSecondary,
-    lineHeight: 16,
+    fontSize: typography.sizes.xxs,
+    color: colors.primaryDark,
+    lineHeight: 15,
   },
 });

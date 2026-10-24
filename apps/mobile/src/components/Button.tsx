@@ -12,7 +12,7 @@ import { colors, radii, spacing, typography } from '../theme/tokens';
 
 export interface ButtonProps extends TouchableOpacityProps {
   title: string;
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'success';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'success' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   style?: ViewStyle;
@@ -37,6 +37,8 @@ export function Button({
     switch (variant) {
       case 'secondary':
         return styles.secondary;
+      case 'outline':
+        return styles.outline;
       case 'danger':
         return styles.danger;
       case 'success':
@@ -53,6 +55,8 @@ export function Button({
     switch (variant) {
       case 'secondary':
         return styles.textSecondary;
+      case 'outline':
+        return styles.textOutline;
       case 'ghost':
         return styles.textGhost;
       case 'danger':
@@ -75,9 +79,21 @@ export function Button({
     }
   };
 
+  const getTextSizeStyle = (): TextStyle => {
+    switch (size) {
+      case 'sm':
+        return styles.textSizeSm;
+      case 'lg':
+        return styles.textSizeLg;
+      case 'md':
+      default:
+        return styles.textSizeMd;
+    }
+  };
+
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.75}
       disabled={isDisabled}
       style={[
         styles.base,
@@ -94,13 +110,17 @@ export function Button({
         <ActivityIndicator
           size="small"
           color={
-            variant === 'secondary' || variant === 'ghost' ? colors.primary : colors.textInverse
+            variant === 'secondary' || variant === 'ghost' || variant === 'outline'
+              ? colors.primary
+              : colors.textInverse
           }
         />
       ) : (
         <>
           {icon}
-          <Text style={[styles.textBase, getTextStyle(), textStyle]}>{title}</Text>
+          <Text style={[styles.textBase, getTextSizeStyle(), getTextStyle(), textStyle]}>
+            {title}
+          </Text>
         </>
       )}
     </TouchableOpacity>
@@ -116,22 +136,27 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   sizeSm: {
-    paddingVertical: spacing.xs + 2,
+    height: 34,
     paddingHorizontal: spacing.md,
   },
   sizeMd: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
+    height: 40,
+    paddingHorizontal: spacing.base,
   },
   sizeLg: {
-    paddingVertical: spacing.base,
-    paddingHorizontal: spacing['2xl'],
+    height: 46,
+    paddingHorizontal: spacing.xl,
   },
   primary: {
     backgroundColor: colors.primary,
   },
   secondary: {
     backgroundColor: colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  outline: {
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
@@ -148,13 +173,25 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   textBase: {
-    fontSize: typography.sizes.base,
     fontWeight: typography.weights.semibold,
+    letterSpacing: 0.1,
+  },
+  textSizeSm: {
+    fontSize: typography.sizes.xs,
+  },
+  textSizeMd: {
+    fontSize: typography.sizes.sm,
+  },
+  textSizeLg: {
+    fontSize: typography.sizes.base,
   },
   textPrimary: {
     color: colors.textInverse,
   },
   textSecondary: {
+    color: colors.textPrimary,
+  },
+  textOutline: {
     color: colors.textPrimary,
   },
   textGhost: {

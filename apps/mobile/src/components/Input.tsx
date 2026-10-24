@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
 import { colors, radii, spacing, typography } from '../theme/tokens';
 
@@ -19,16 +19,41 @@ export function Input({
   leftElement,
   rightElement,
   style,
+  onFocus,
+  onBlur,
+  multiline,
   ...props
 }: InputProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputWrapper, !!error && styles.inputWrapperError]}>
-        {leftElement}
+      <View
+        style={[
+          styles.inputWrapper,
+          multiline && styles.inputWrapperMultiline,
+          isFocused && styles.inputWrapperFocused,
+          !!error && styles.inputWrapperError,
+        ]}
+      >
+        {leftElement && (
+          <View style={[styles.leftElementWrapper, multiline && styles.leftElementMultiline]}>
+            {leftElement}
+          </View>
+        )}
         <TextInput
           placeholderTextColor={colors.textMuted}
-          style={[styles.input, style]}
+          style={[styles.input, multiline && styles.inputMultiline, style]}
+          onFocus={(e) => {
+            setIsFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            onBlur?.(e);
+          }}
+          multiline={multiline}
           {...props}
         />
         {rightElement}
@@ -44,10 +69,10 @@ export function Input({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.base,
+    marginBottom: spacing.md,
   },
   label: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
@@ -56,31 +81,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.surfaceBorder,
     borderRadius: radii.base,
     paddingHorizontal: spacing.md,
-    minHeight: 50,
+    height: 42,
+  },
+  inputWrapperMultiline: {
+    height: 'auto',
+    minHeight: 76,
+    alignItems: 'flex-start',
+    paddingVertical: spacing.sm,
+  },
+  inputWrapperFocused: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
   },
   inputWrapperError: {
     borderColor: colors.danger,
     backgroundColor: colors.dangerLight,
   },
+  leftElementWrapper: {
+    justifyContent: 'center',
+  },
+  leftElementMultiline: {
+    marginTop: 2,
+  },
   input: {
     flex: 1,
-    fontSize: typography.sizes.base,
+    fontSize: typography.sizes.sm,
     color: colors.textPrimary,
-    paddingVertical: spacing.sm,
+    paddingVertical: 0,
+    height: '100%',
+  },
+  inputMultiline: {
+    height: 'auto',
+    minHeight: 56,
+    textAlignVertical: 'top',
   },
   errorText: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.sizes.xxs,
     color: colors.danger,
-    marginTop: spacing.xs,
+    marginTop: 4,
     fontWeight: typography.weights.medium,
   },
   hintText: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.sizes.xxs,
     color: colors.textMuted,
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
 });

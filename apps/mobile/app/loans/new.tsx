@@ -7,17 +7,22 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TouchableOpacity,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useCreateLoan } from '../../src/features/loans/useCreateLoan';
 import { Button } from '../../src/components/Button';
 import { Input } from '../../src/components/Input';
-import { colors, radii, spacing, typography } from '../../src/theme/tokens';
-import { rupeesToPaise, formatPaiseToINR, getTodayDateString } from '@miniledger/shared';
+import { colors, radii, spacing, typography, shadows } from '../../src/theme/tokens';
+import { rupeesToPaise, formatPaiseToINR } from '@miniledger/shared';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function NewLoanScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+
   const createLoanMutation = useCreateLoan();
 
   const [friendName, setFriendName] = useState('');
@@ -62,7 +67,7 @@ export default function NewLoanScreen() {
     if (!dueDate.trim()) {
       errs.dueDate = 'Due date is required';
     } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate.trim())) {
-      errs.dueDate = 'Due date must be in YYYY-MM-DD format';
+      errs.dueDate = 'Due date must be in YYYY-MM-DD format (e.g. 2026-11-20)';
     } else if (isNaN(new Date(dueDate).getTime())) {
       errs.dueDate = 'Invalid calendar date';
     }
@@ -72,7 +77,7 @@ export default function NewLoanScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!validate()) return;
+    if (!validate() || createLoanMutation.isPending) return;
 
     try {
       await createLoanMutation.mutateAsync({
@@ -94,96 +99,133 @@ export default function NewLoanScreen() {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.formCard}>
-          <Text style={styles.sectionHeader}>Loan Details</Text>
+        <View style={[styles.formCardWrapper, isDesktop && styles.formCardWrapperDesktop]}>
+          {/* Breadcrumb / Back button */}
+          <View style={styles.topBackRow}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={16} color={colors.textSecondary} />
+              <Text style={styles.backText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
 
-          {/* Friend Name */}
-          <Input
-            label="Who are you lending to? *"
-            placeholder="e.g. Rahul Sharma"
-            value={friendName}
-            onChangeText={(t) => {
-              setFriendName(t);
-              if (errors.friendName) setErrors((prev) => ({ ...prev, friendName: '' }));
-            }}
-            error={errors.friendName}
-            leftElement={
-              <Ionicons
-                name="person-outline"
-                size={20}
-                color={colors.textMuted}
-                style={styles.inputIcon}
+          <View style={styles.formCard}>
+            {/* Header */}
+            <View style={styles.cardHeader}>
+              <View style={styles.iconCircle}>
+                <Ionicons name="add-circle" size={22} color={colors.primary} />
+              </View>
+              <View>
+                <Text style={styles.title}>Record New Loan</Text>
+                <Text style={styles.subtitle}>
+                  Enter the borrowing friend and repayment terms.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            {/* Friend Name */}
+            <Input
+              label="Recipient / Friend's Name *"
+              placeholder="e.g. Rohan Mehra"
+              value={friendName}
+              onChangeText={(t) => {
+                setFriendName(t);
+                if (errors.friendName) setErrors((prev) => ({ ...prev, friendName: '' }));
+              }}
+              error={errors.friendName}
+              leftElement={
+                <Ionicons
+                  name="person-outline"
+                  size={16}
+                  color={colors.textMuted}
+                  style={styles.inputIcon}
+                />
+              }
+            />
+
+            {/* Amount in Rupees */}
+            <Input
+              label="Principal Amount (₹) *"
+              placeholder="e.g. 5000.00"
+              value={amountRupees}
+              onChangeText={(t) => {
+                setAmountRupees(t);
+                if (errors.amount) setErrors((prev) => ({ ...prev, amount: '' }));
+              }}
+              keyboardType="decimal-pad"
+              error={errors.amount}
+              leftElement={<Text style={styles.currencyPrefix}>₹</Text>}
+              hint={
+                previewPaise !== null
+                  ? `Stored as ${previewPaise} integer paise (${formatPaiseToINR(previewPaise)})`
+                  : 'Minimum ₹1.00, maximum 2 decimal places'
+              }
+            />
+
+            {/* Due Date */}
+            <Input
+              label="Agreed Repayment Due Date (YYYY-MM-DD) *"
+              placeholder="YYYY-MM-DD"
+              value={dueDate}
+              onChangeText={(t) => {
+                setDueDate(t);
+                if (errors.dueDate) setErrors((prev) => ({ ...prev, dueDate: '' }));
+              }}
+              error={errors.dueDate}
+              leftElement={
+                <Ionicons
+                  name="calendar-outline"
+                  size={16}
+                  color={colors.textMuted}
+                  style={styles.inputIcon}
+                />
+              }
+              hint="Loans past this date will automatically be flagged as Overdue in your ledger."
+            />
+
+            {/* Optional Note */}
+            <Input
+              label="Purpose / Memo (Optional)"
+              placeholder="e.g. Flight booking advance, restaurant bill split"
+              value={note}
+              onChangeText={setNote}
+              multiline
+              numberOfLines={3}
+              maxLength={500}
+              style={styles.textArea}
+              containerStyle={styles.noteContainer}
+              leftElement={
+                <Ionicons
+                  name="document-text-outline"
+                  size={16}
+                  color={colors.textMuted}
+                  style={styles.inputIcon}
+                />
+              }
+            />
+
+            {/* Action Row */}
+            <View style={styles.actionRow}>
+              <Button
+                title="Cancel"
+                variant="outline"
+                size="md"
+                onPress={() => router.back()}
+                style={styles.cancelBtn}
               />
-            }
-          />
-
-          {/* Amount in Rupees */}
-          <Input
-            label="Loan Amount (₹) *"
-            placeholder="e.g. 2500.00"
-            value={amountRupees}
-            onChangeText={(t) => {
-              setAmountRupees(t);
-              if (errors.amount) setErrors((prev) => ({ ...prev, amount: '' }));
-            }}
-            keyboardType="decimal-pad"
-            error={errors.amount}
-            leftElement={<Text style={styles.currencyPrefix}>₹</Text>}
-            hint={
-              previewPaise !== null
-                ? `Stored as ${previewPaise} integer paise (${formatPaiseToINR(previewPaise)})`
-                : 'Minimum ₹1.00, maximum 2 decimal places'
-            }
-          />
-
-          {/* Due Date */}
-          <Input
-            label="Repayment Due Date (YYYY-MM-DD) *"
-            placeholder="2026-11-20"
-            value={dueDate}
-            onChangeText={(t) => {
-              setDueDate(t);
-              if (errors.dueDate) setErrors((prev) => ({ ...prev, dueDate: '' }));
-            }}
-            error={errors.dueDate}
-            leftElement={
-              <Ionicons
-                name="calendar-outline"
-                size={20}
-                color={colors.textMuted}
-                style={styles.inputIcon}
+              <Button
+                title="Save Loan Record"
+                variant="primary"
+                size="md"
+                loading={createLoanMutation.isPending}
+                disabled={createLoanMutation.isPending}
+                onPress={handleSubmit}
+                icon={<Ionicons name="checkmark" size={16} color={colors.textInverse} />}
+                style={styles.submitBtn}
               />
-            }
-            hint="Loans not repaid by this date will be flagged as Overdue."
-          />
-
-          {/* Optional Note */}
-          <Input
-            label="Note or Reason (Optional)"
-            placeholder="e.g. Dinner split, travel expense, college fee"
-            value={note}
-            onChangeText={setNote}
-            multiline
-            numberOfLines={3}
-            maxLength={500}
-            leftElement={
-              <Ionicons
-                name="document-text-outline"
-                size={20}
-                color={colors.textMuted}
-                style={styles.inputIcon}
-              />
-            }
-          />
-
-          <Button
-            title="Create Loan Record"
-            size="lg"
-            loading={createLoanMutation.isPending}
-            onPress={handleSubmit}
-            style={styles.submitButton}
-            icon={<Ionicons name="checkmark" size={20} color={colors.textInverse} />}
-          />
+            </View>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -198,6 +240,30 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.base,
     paddingBottom: spacing['4xl'],
+    alignItems: 'center',
+  },
+  formCardWrapper: {
+    width: '100%',
+    maxWidth: 580,
+  },
+  formCardWrapperDesktop: {
+    marginTop: spacing.xl,
+  },
+  topBackRow: {
+    marginBottom: spacing.md,
+    alignSelf: 'flex-start',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+  },
+  backText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
   },
   formCard: {
     backgroundColor: colors.surface,
@@ -205,23 +271,64 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    ...shadows.sm,
   },
-  sectionHeader: {
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.md,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    marginBottom: spacing.base,
+  },
+  subtitle: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.surfaceBorder,
+    marginVertical: spacing.lg,
   },
   inputIcon: {
     marginRight: spacing.sm,
   },
   currencyPrefix: {
-    fontSize: typography.sizes.lg,
+    fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
-    marginRight: spacing.sm,
+    marginRight: spacing.xs,
   },
-  submitButton: {
-    marginTop: spacing.base,
+  noteContainer: {
+    marginBottom: spacing.lg,
+  },
+  textArea: {
+    height: 72,
+    textAlignVertical: 'top',
+    paddingTop: 8,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  cancelBtn: {
+    minWidth: 90,
+  },
+  submitBtn: {
+    minWidth: 160,
   },
 });

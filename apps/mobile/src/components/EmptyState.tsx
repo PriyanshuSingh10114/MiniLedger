@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '../theme/tokens';
+import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
 import { Button } from './Button';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -20,50 +20,62 @@ export function EmptyState({
   iconName = 'wallet-outline',
 }: EmptyStateProps) {
   return (
-    <View style={styles.container}>
+    <View style={styles.card}>
       <View style={styles.iconCircle}>
-        <Ionicons name={iconName} size={48} color={colors.primary} />
+        <Ionicons name={iconName} size={24} color={colors.primary} />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
       {actionTitle && onAction && (
-        <Button title={actionTitle} onPress={onAction} style={styles.button} />
+        <Button
+          title={actionTitle}
+          size="sm"
+          onPress={onAction}
+          icon={<Ionicons name="add" size={14} color={colors.textInverse} />}
+          style={styles.button}
+        />
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing['2xl'],
-    marginVertical: spacing.xl,
+    padding: spacing.xl,
+    marginVertical: spacing.md,
+    ...shadows.xs,
   },
   iconCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   title: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.sizes.base,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   description: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: spacing.xl,
+    lineHeight: 18,
+    maxWidth: 380,
+    marginBottom: spacing.base,
   },
   button: {
-    minWidth: 160,
+    minWidth: 130,
   },
 });

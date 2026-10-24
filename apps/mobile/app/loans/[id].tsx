@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+  useWindowDimensions,
+  Platform,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useLoanDetails } from '../../src/features/loans/useLoanDetails';
 import { useRepayLoan } from '../../src/features/loans/useRepayLoan';
@@ -13,6 +23,8 @@ import { Ionicons } from '@expo/vector-icons';
 export default function LoanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   const { data: loan, isLoading, isError, error } = useLoanDetails(id);
   const repayMutation = useRepayLoan(id);
@@ -23,7 +35,7 @@ export default function LoanDetailScreen() {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading loan details...</Text>
+        <Text style={styles.loadingText}>Retrieving loan statement...</Text>
       </View>
     );
   }
@@ -31,12 +43,12 @@ export default function LoanDetailScreen() {
   if (isError || !loan) {
     return (
       <View style={styles.centerContainer}>
-        <Ionicons name="alert-circle-outline" size={56} color={colors.danger} />
-        <Text style={styles.errorTitle}>Loan Not Found</Text>
+        <Ionicons name="alert-circle-outline" size={48} color={colors.danger} />
+        <Text style={styles.errorTitle}>Loan Record Not Found</Text>
         <Text style={styles.errorText}>
-          {(error as any)?.message || 'This loan does not exist or was deleted.'}
+          {(error as any)?.message || 'This loan record could not be found.'}
         </Text>
-        <Button title="Go Back" onPress={() => router.back()} style={styles.backButton} />
+        <Button title="Back to All Loans" size="sm" onPress={() => router.back()} />
       </View>
     );
   }
@@ -50,7 +62,7 @@ export default function LoanDetailScreen() {
       setConfirmModalVisible(false);
       Alert.alert(
         'Loan Settled',
-        `The loan to ${loan.friendName} has been marked as fully repaid!`,
+        `The loan to ${loan.friendName} for ${formatPaiseToINR(loan.outstandingAmount)} has been recorded as fully settled!`,
       );
     } catch (err: any) {
       Alert.alert('Repayment Failed', err?.message || 'Could not record repayment');
@@ -59,148 +71,198 @@ export default function LoanDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Header Profile Card */}
-      <View
-        style={[
-          styles.headerCard,
-          isOverdue && styles.headerCardOverdue,
-          isRepaid && styles.headerCardRepaid,
-        ]}
-      >
-        <View style={styles.avatarRow}>
-          <View
-            style={[
-              styles.avatar,
-              isOverdue && styles.avatarOverdue,
-              isRepaid && styles.avatarRepaid,
-            ]}
-          >
-            <Text
-              style={[
-                styles.avatarText,
-                isOverdue && styles.avatarTextOverdue,
-                isRepaid && styles.avatarTextRepaid,
-              ]}
-            >
-              {loan.friendName.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.friendName}>{loan.friendName}</Text>
-            <Text style={styles.createdDate}>
-              Recorded on {formatDateForDisplay(loan.createdAt)}
-            </Text>
-          </View>
-          <Badge status={isRepaid ? 'REPAID' : isOverdue ? 'OVERDUE' : 'OUTSTANDING'} />
+      <View style={[styles.maxWidthWrapper, isDesktop && styles.maxWidthWrapperDesktop]}>
+        {/* Navigation Breadcrumb */}
+        <View style={styles.breadcrumbRow}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={16} color={colors.textSecondary} />
+            <Text style={styles.backText}>All Loans</Text>
+          </TouchableOpacity>
+          <Text style={styles.breadcrumbSep}>/</Text>
+          <Text style={styles.breadcrumbCurrent}>{loan.friendName}</Text>
         </View>
 
-        <View style={styles.divider} />
+        {/* Financial Statement Card */}
+        <View style={styles.statementCard}>
+          {/* Top Profile & Status Bar */}
+          <View style={styles.headerRow}>
+            <View style={styles.avatarGroup}>
+              <View
+                style={[
+                  styles.avatar,
+                  isOverdue ? styles.avatarOverdue : isRepaid ? styles.avatarRepaid : styles.avatarActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.avatarText,
+                    isOverdue ? styles.avatarTextOverdue : isRepaid ? styles.avatarTextRepaid : styles.avatarTextActive,
+                  ]}
+                >
+                  {loan.friendName.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View>
+                <Text style={styles.friendName}>{loan.friendName}</Text>
+                <Text style={styles.createdText}>
+                  Recorded on {formatDateForDisplay(loan.createdAt)}
+                </Text>
+              </View>
+            </View>
 
-        {/* Balance Breakdown */}
-        <View style={styles.balanceGrid}>
-          <View style={styles.balanceCol}>
-            <Text style={styles.balanceLabel}>Original Lent</Text>
-            <Text style={styles.balanceValue}>{formatPaiseToINR(loan.amount)}</Text>
+            <Badge
+              status={isRepaid ? 'REPAID' : isOverdue ? 'OVERDUE' : 'OUTSTANDING'}
+              size="md"
+            />
           </View>
 
-          <View style={styles.balanceCol}>
-            <Text style={styles.balanceLabel}>Total Repaid</Text>
-            <Text style={[styles.balanceValue, styles.repaidValue]}>
-              {formatPaiseToINR(loan.repaidAmount)}
-            </Text>
-          </View>
+          <View style={styles.divider} />
 
-          <View style={styles.balanceCol}>
-            <Text style={styles.balanceLabel}>Outstanding</Text>
-            <Text style={[styles.balanceValue, isOverdue && styles.overdueValue]}>
-              {formatPaiseToINR(loan.outstandingAmount)}
-            </Text>
+          {/* 3-Column Financial Breakdown */}
+          <View style={styles.financialMetricsRow}>
+            <View style={styles.metricBlock}>
+              <Text style={styles.metricLabel}>Original Lent</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  Platform.OS === 'web' && ({ fontVariant: ['tabular-nums'] } as any),
+                ]}
+              >
+                {formatPaiseToINR(loan.amount)}
+              </Text>
+            </View>
+
+            <View style={styles.metricDivider} />
+
+            <View style={styles.metricBlock}>
+              <Text style={styles.metricLabel}>Total Settled</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  styles.repaidValue,
+                  Platform.OS === 'web' && ({ fontVariant: ['tabular-nums'] } as any),
+                ]}
+              >
+                {formatPaiseToINR(loan.repaidAmount)}
+              </Text>
+            </View>
+
+            <View style={styles.metricDivider} />
+
+            <View style={styles.metricBlock}>
+              <Text style={styles.metricLabel}>Outstanding Balance</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  isOverdue ? styles.overdueValue : isRepaid ? styles.repaidValue : styles.activeValue,
+                  Platform.OS === 'web' && ({ fontVariant: ['tabular-nums'] } as any),
+                ]}
+              >
+                {formatPaiseToINR(loan.outstandingAmount)}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Due Date Info Banner */}
-      <View
-        style={[
-          styles.banner,
-          isOverdue ? styles.bannerOverdue : isRepaid ? styles.bannerRepaid : styles.bannerNeutral,
-        ]}
-      >
-        <Ionicons
-          name={isOverdue ? 'alert-circle' : isRepaid ? 'checkmark-circle' : 'calendar'}
-          size={20}
-          color={isOverdue ? colors.danger : isRepaid ? colors.success : colors.primary}
-        />
-        <Text
+        {/* Due Date & Status Banner */}
+        <View
           style={[
-            styles.bannerText,
-            isOverdue && styles.bannerTextOverdue,
-            isRepaid && styles.bannerTextRepaid,
+            styles.banner,
+            isOverdue ? styles.bannerOverdue : isRepaid ? styles.bannerRepaid : styles.bannerNeutral,
           ]}
         >
-          {isRepaid
-            ? 'This loan is fully settled.'
-            : isOverdue
-              ? `Payment was due on ${formatDateForDisplay(loan.dueDate)} and is OVERDUE.`
-              : `Repayment is scheduled on ${formatDateForDisplay(loan.dueDate)}.`}
-        </Text>
-      </View>
-
-      {/* Note Section if exists */}
-      {loan.note ? (
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Note / Reason</Text>
-          <Text style={styles.noteText}>{loan.note}</Text>
-        </View>
-      ) : null}
-
-      {/* Repayment History */}
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Repayment History</Text>
-        {loan.repayments && loan.repayments.length > 0 ? (
-          loan.repayments.map((r, idx) => (
-            <View key={r.id || idx} style={styles.repaymentItem}>
-              <View style={styles.repaymentLeft}>
-                <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-                <View>
-                  <Text style={styles.repaymentDate}>{formatDateForDisplay(r.repaidAt)}</Text>
-                  <Text style={styles.repaymentSub}>Full repayment settled</Text>
-                </View>
-              </View>
-              <Text style={styles.repaymentAmount}>+{formatPaiseToINR(r.amount)}</Text>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyRepaymentsText}>No repayments recorded yet.</Text>
-        )}
-      </View>
-
-      {/* Mark As Repaid CTA */}
-      {!isRepaid && (
-        <View style={styles.actionContainer}>
-          <Button
-            title={`Mark as Fully Repaid (${formatPaiseToINR(loan.outstandingAmount)})`}
-            variant="success"
-            size="lg"
-            onPress={() => setConfirmModalVisible(true)}
-            icon={<Ionicons name="checkmark-done" size={20} color={colors.textInverse} />}
+          <Ionicons
+            name={isOverdue ? 'alert-circle' : isRepaid ? 'checkmark-circle' : 'calendar'}
+            size={18}
+            color={isOverdue ? colors.danger : isRepaid ? colors.success : colors.primary}
           />
+          <Text
+            style={[
+              styles.bannerText,
+              isOverdue && styles.bannerTextOverdue,
+              isRepaid && styles.bannerTextRepaid,
+            ]}
+          >
+            {isRepaid
+              ? 'This loan is fully settled. No further repayments are required.'
+              : isOverdue
+                ? `Repayment was due on ${formatDateForDisplay(loan.dueDate)} and is currently OVERDUE.`
+                : `Repayment is scheduled by ${formatDateForDisplay(loan.dueDate)}.`}
+          </Text>
         </View>
-      )}
 
-      {/* Confirmation Dialog */}
-      <ConfirmationModal
-        visible={confirmModalVisible}
-        title="Confirm Repayment"
-        message={`Has ${loan.friendName} repaid the entire outstanding balance of ${formatPaiseToINR(loan.outstandingAmount)}? This will mark the loan as settled.`}
-        confirmTitle="Yes, Mark Repaid"
-        cancelTitle="Cancel"
-        loading={repayMutation.isPending}
-        onConfirm={handleConfirmRepay}
-        onCancel={() => setConfirmModalVisible(false)}
-        variant="success"
-        iconName="cash-outline"
-      />
+        {/* Note / Reason if present */}
+        {loan.note ? (
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>Memo / Note</Text>
+            <Text style={styles.noteBody}>{loan.note}</Text>
+          </View>
+        ) : null}
+
+        {/* Repayment History */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Repayment History</Text>
+          {loan.repayments && loan.repayments.length > 0 ? (
+            loan.repayments.map((r, idx) => (
+              <View key={r.id || idx} style={styles.historyRow}>
+                <View style={styles.historyLeft}>
+                  <View style={styles.historyIcon}>
+                    <Ionicons name="checkmark-done" size={14} color={colors.success} />
+                  </View>
+                  <View>
+                    <Text style={styles.historyDate}>
+                      Repaid on {formatDateForDisplay(r.repaidAt)}
+                    </Text>
+                    <Text style={styles.historySubtitle}>Settled via recorded payment</Text>
+                  </View>
+                </View>
+                <Text
+                  style={[
+                    styles.historyAmount,
+                    Platform.OS === 'web' && ({ fontVariant: ['tabular-nums'] } as any),
+                  ]}
+                >
+                  +{formatPaiseToINR(r.amount)}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyHistory}>No repayments recorded for this loan yet.</Text>
+          )}
+        </View>
+
+        {/* Mark as Repaid Action */}
+        {!isRepaid && (
+          <View style={styles.actionSection}>
+            <Button
+              title={`Mark as Fully Repaid (${formatPaiseToINR(loan.outstandingAmount)})`}
+              variant="success"
+              size="lg"
+              loading={repayMutation.isPending}
+              disabled={repayMutation.isPending}
+              onPress={() => setConfirmModalVisible(true)}
+              icon={<Ionicons name="checkmark-done" size={18} color={colors.textInverse} />}
+              style={styles.repayButton}
+            />
+          </View>
+        )}
+
+        {/* Repayment Confirmation Modal */}
+        <ConfirmationModal
+          visible={confirmModalVisible}
+          title="Confirm Loan Settlement"
+          message={`Are you sure you want to record ${loan.friendName} as having repaid ${formatPaiseToINR(
+            loan.outstandingAmount,
+          )}? This will zero out the outstanding balance and mark the loan as Settled.`}
+          confirmTitle="Yes, Mark as Repaid"
+          cancelTitle="Cancel"
+          loading={repayMutation.isPending}
+          onConfirm={handleConfirmRepay}
+          onCancel={() => setConfirmModalVisible(false)}
+          variant="success"
+          iconName="cash-outline"
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -213,6 +275,14 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: spacing.base,
     paddingBottom: spacing['4xl'],
+    alignItems: 'center',
+  },
+  maxWidthWrapper: {
+    width: '100%',
+    maxWidth: 720,
+  },
+  maxWidthWrapperDesktop: {
+    marginTop: spacing.md,
   },
   centerContainer: {
     flex: 1,
@@ -220,6 +290,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.xl,
     backgroundColor: colors.background,
+    minHeight: 300,
   },
   loadingText: {
     marginTop: spacing.md,
@@ -227,47 +298,72 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   errorTitle: {
-    fontSize: typography.sizes.lg,
+    fontSize: typography.sizes.base,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
     marginTop: spacing.md,
   },
   errorText: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.textSecondary,
-    marginTop: spacing.xs,
-    marginBottom: spacing.lg,
+    marginTop: 4,
+    marginBottom: spacing.base,
+  },
+  breadcrumbRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   backButton: {
-    minWidth: 140,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
   },
-  headerCard: {
+  backText: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    fontWeight: typography.weights.medium,
+  },
+  breadcrumbSep: {
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+  },
+  breadcrumbCurrent: {
+    fontSize: typography.sizes.xs,
+    color: colors.textPrimary,
+    fontWeight: typography.weights.semibold,
+  },
+  statementCard: {
     backgroundColor: colors.surface,
     borderRadius: radii.xl,
     padding: spacing.xl,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    marginBottom: spacing.md,
     ...shadows.sm,
-    marginBottom: spacing.base,
   },
-  headerCardOverdue: {
-    borderColor: colors.dangerBorder,
-  },
-  headerCardRepaid: {
-    borderColor: colors.successBorder,
-  },
-  avatarRow: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  avatarGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.full,
-    backgroundColor: colors.primaryLight,
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+  },
+  avatarActive: {
+    backgroundColor: colors.primaryLight,
   },
   avatarOverdue: {
     backgroundColor: colors.dangerLight,
@@ -276,8 +372,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.successLight,
   },
   avatarText: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
+  },
+  avatarTextActive: {
     color: colors.primary,
   },
   avatarTextOverdue: {
@@ -286,16 +384,13 @@ const styles = StyleSheet.create({
   avatarTextRepaid: {
     color: colors.success,
   },
-  headerInfo: {
-    flex: 1,
-  },
   friendName: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
   },
-  createdDate: {
-    fontSize: typography.sizes.xs,
+  createdText: {
+    fontSize: typography.sizes.xxs,
     color: colors.textMuted,
     marginTop: 2,
   },
@@ -304,20 +399,29 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceBorder,
     marginVertical: spacing.lg,
   },
-  balanceGrid: {
+  financialMetricsRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  balanceCol: {
+  metricBlock: {
     flex: 1,
   },
-  balanceLabel: {
-    fontSize: typography.sizes.xs,
+  metricDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: colors.surfaceBorder,
+    marginHorizontal: spacing.md,
+  },
+  metricLabel: {
+    fontSize: typography.sizes.xxs,
     color: colors.textMuted,
     marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  balanceValue: {
-    fontSize: typography.sizes.base,
+  metricValue: {
+    fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
   },
@@ -327,13 +431,16 @@ const styles = StyleSheet.create({
   overdueValue: {
     color: colors.dangerDark,
   },
+  activeValue: {
+    color: colors.primary,
+  },
   banner: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radii.base,
-    marginBottom: spacing.base,
-    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
   bannerNeutral: {
     backgroundColor: colors.primaryLight,
@@ -346,7 +453,7 @@ const styles = StyleSheet.create({
   },
   bannerText: {
     flex: 1,
-    fontSize: typography.sizes.sm,
+    fontSize: typography.sizes.xs,
     color: colors.primaryDark,
     fontWeight: typography.weights.medium,
   },
@@ -360,54 +467,66 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.base,
-    marginBottom: spacing.base,
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
+    marginBottom: spacing.md,
+    ...shadows.xs,
   },
   sectionTitle: {
-    fontSize: typography.sizes.base,
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
-  noteText: {
+  noteBody: {
     fontSize: typography.sizes.sm,
     color: colors.textSecondary,
     lineHeight: 20,
   },
-  repaymentItem: {
+  historyRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceBorder,
+    borderBottomColor: colors.surfaceBorderSubtle,
   },
-  repaymentLeft: {
+  historyLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
-  repaymentDate: {
-    fontSize: typography.sizes.sm,
+  historyIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: radii.full,
+    backgroundColor: colors.successLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyDate: {
+    fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
     color: colors.textPrimary,
   },
-  repaymentSub: {
-    fontSize: typography.sizes.xs,
+  historySubtitle: {
+    fontSize: 10,
     color: colors.textMuted,
   },
-  repaymentAmount: {
-    fontSize: typography.sizes.base,
+  historyAmount: {
+    fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.successDark,
   },
-  emptyRepaymentsText: {
-    fontSize: typography.sizes.sm,
+  emptyHistory: {
+    fontSize: typography.sizes.xs,
     color: colors.textMuted,
     fontStyle: 'italic',
   },
-  actionContainer: {
-    marginTop: spacing.md,
+  actionSection: {
+    marginTop: spacing.sm,
+  },
+  repayButton: {
+    width: '100%',
   },
 });
