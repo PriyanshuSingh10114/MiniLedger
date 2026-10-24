@@ -277,19 +277,28 @@ docker compose logs -f api
 
 ## 👤 Author & Maintainer
 
-<table align="center">
+<table align="center" width="100%">
   <tr>
-    <td align="center">
-      <a href="https://github.com/PriyanshuSingh10114">
-        <img src="https://avatars.githubusercontent.com/u/10114?v=4" width="100px;" alt="Priyanshu Singh" style="border-radius: 50%;" /><br />
-        <sub><b>Priyanshu Singh</b></sub>
-      </a><br />
-      <a href="https://github.com/PriyanshuSingh10114" title="GitHub">
-        <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" />
-      </a>
-      <a href="mailto:priyanshusingh22340@gmail.com" title="Email">
-        <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" />
-      </a>
+    <td align="center" width="30%">
+      <img src="https://github.com/PriyanshuSingh10114.png" width="130px;" alt="Priyanshu Singh" style="border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"/><br/>
+      <b>Priyanshu Singh</b><br/>
+      <sub>Software Engineer | AI, Cloud & Cybersecurity</sub>
+    </td>
+    <td width="70%">
+      <p><b>Bio:</b> Computer Science and Engineering student specializing in <b>AI application development, cloud-native systems, cybersecurity, and DevSecOps</b>. Experienced in building <b>AI-powered applications, secure backend services, cloud infrastructure, and automated deployment workflows</b> using technologies across AWS, Kubernetes, Docker, Terraform, FastAPI, Node.js, React, and modern AI/LLM frameworks.</p>
+      <p>
+        <a href="https://github.com/PriyanshuSingh10114"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/></a>
+        <a href="mailto:priyanshusingh22340@gmail.com"><img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"/></a>
+        <a href="https://linkedin.com"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/></a>
+      </p>
+      <p>
+        <b>Experience & Technical Focus:</b>
+        <br/>
+        <br/>
+        <img src="https://img.shields.io/badge/TM_Cloud_Solutions-AI_Application_Development-0284C7?style=for-the-badge&logo=googlecloud&logoColor=white" alt="TM Cloud Solutions"/>
+        <br/>
+        <img src="https://img.shields.io/badge/Quick_Intell-Software_Engineering-6366F1?style=for-the-badge&logo=git&logoColor=white" alt="Quick Intell"/>
+      </p>
     </td>
   </tr>
 </table>
