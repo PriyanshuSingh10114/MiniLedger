@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { colors, radii, spacing, typography } from '../theme/tokens.js';
+import { colors, radii, spacing, typography } from '../theme/tokens';
 
 export interface BadgeProps {
   status: 'OVERDUE' | 'REPAID' | 'OUTSTANDING';

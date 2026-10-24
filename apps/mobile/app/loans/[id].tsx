@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useLoanDetails } from '../../src/features/loans/useLoanDetails.js';
-import { useRepayLoan } from '../../src/features/loans/useRepayLoan.js';
-import { Badge } from '../../src/components/Badge.js';
-import { Button } from '../../src/components/Button.js';
-import { ConfirmationModal } from '../../src/components/ConfirmationModal.js';
-import { colors, radii, spacing, typography, shadows } from '../../src/theme/tokens.js';
+import { useLoanDetails } from '../../src/features/loans/useLoanDetails';
+import { useRepayLoan } from '../../src/features/loans/useRepayLoan';
+import { Badge } from '../../src/components/Badge';
+import { Button } from '../../src/components/Button';
+import { ConfirmationModal } from '../../src/components/ConfirmationModal';
+import { colors, radii, spacing, typography, shadows } from '../../src/theme/tokens';
 import { formatPaiseToINR, formatDateForDisplay } from '@miniledger/shared';
 import { Ionicons } from '@expo/vector-icons';
 

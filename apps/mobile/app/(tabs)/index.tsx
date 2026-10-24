@@ -9,13 +9,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useDashboardSummary } from '../../src/features/loans/useDashboardSummary.js';
-import { useAuth } from '../../src/features/auth/AuthContext.js';
-import { MetricCard } from '../../src/components/MetricCard.js';
-import { LoanCard } from '../../src/components/LoanCard.js';
-import { EmptyState } from '../../src/components/EmptyState.js';
-import { Button } from '../../src/components/Button.js';
-import { colors, radii, spacing, typography, shadows } from '../../src/theme/tokens.js';
+import { useDashboardSummary } from '../../src/features/loans/useDashboardSummary';
+import { useAuth } from '../../src/features/auth/AuthContext';
+import { MetricCard } from '../../src/components/MetricCard';
+import { LoanCard } from '../../src/components/LoanCard';
+import { EmptyState } from '../../src/components/EmptyState';
+import { Button } from '../../src/components/Button';
+import { colors, radii, spacing, typography, shadows } from '../../src/theme/tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function DashboardScreen() {

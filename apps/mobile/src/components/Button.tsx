@@ -8,7 +8,7 @@ import {
   TextStyle,
   TouchableOpacityProps,
 } from 'react-native';
-import { colors, radii, spacing, typography } from '../theme/tokens.js';
+import { colors, radii, spacing, typography } from '../theme/tokens';
 
 export interface ButtonProps extends TouchableOpacityProps {
   title: string;

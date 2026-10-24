@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '../../lib/api.js';
+import { apiRequest } from '../../lib/api';
 
 export function useRepayLoan(loanId: string) {
   const queryClient = useQueryClient();

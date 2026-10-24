@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors, radii, spacing, typography, shadows } from '../theme/tokens.js';
-import { Badge } from './Badge.js';
+import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
+import { Badge } from './Badge';
 import { formatPaiseToINR, formatDateForDisplay, Loan } from '@miniledger/shared';
 import { Ionicons } from '@expo/vector-icons';
 

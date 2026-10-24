@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
-import { useAuth } from '../src/features/auth/AuthContext.js';
-import { Button } from '../src/components/Button.js';
-import { ConfirmationModal } from '../src/components/ConfirmationModal.js';
-import { colors, radii, spacing, typography, shadows } from '../src/theme/tokens.js';
-import { API_BASE_URL } from '../src/lib/api.js';
+import { useAuth } from '../src/features/auth/AuthContext';
+import { Button } from '../src/components/Button';
+import { ConfirmationModal } from '../src/components/ConfirmationModal';
+import { colors, radii, spacing, typography, shadows } from '../src/theme/tokens';
+import { API_BASE_URL } from '../src/lib/api';
 import { formatDateForDisplay } from '@miniledger/shared';
 import { Ionicons } from '@expo/vector-icons';
 

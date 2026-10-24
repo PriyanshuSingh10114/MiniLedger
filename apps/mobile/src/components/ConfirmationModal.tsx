@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { colors, radii, spacing, typography, shadows } from '../theme/tokens.js';
-import { Button } from './Button.js';
+import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
+import { Button } from './Button';
 import { Ionicons } from '@expo/vector-icons';
 
 export interface ConfirmationModalProps {

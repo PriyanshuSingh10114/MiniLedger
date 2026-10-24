@@ -9,10 +9,10 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useCreateLoan } from '../../src/features/loans/useCreateLoan.js';
-import { Button } from '../../src/components/Button.js';
-import { Input } from '../../src/components/Input.js';
-import { colors, radii, spacing, typography } from '../../src/theme/tokens.js';
+import { useCreateLoan } from '../../src/features/loans/useCreateLoan';
+import { Button } from '../../src/components/Button';
+import { Input } from '../../src/components/Input';
+import { colors, radii, spacing, typography } from '../../src/theme/tokens';
 import { rupeesToPaise, formatPaiseToINR, getTodayDateString } from '@miniledger/shared';
 import { Ionicons } from '@expo/vector-icons';
 

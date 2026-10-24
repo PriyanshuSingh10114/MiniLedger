@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '../../lib/api.js';
+import { apiRequest } from '../../lib/api';
 import { Loan, LoanQueryParams } from '@miniledger/shared';
 
 export function useLoans(params: Partial<LoanQueryParams> = {}) {

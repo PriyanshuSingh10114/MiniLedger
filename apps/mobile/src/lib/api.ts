@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import { tokenStorage } from './storage.js';
+import { tokenStorage } from './storage';
 
 // Default host networking: Android emulator maps host to 10.0.2.2, Web/iOS use localhost
 const DEFAULT_API_HOST =

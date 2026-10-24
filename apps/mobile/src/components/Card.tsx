@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewProps, ViewStyle } from 'react-native';
-import { colors, radii, spacing, shadows } from '../theme/tokens.js';
+import { colors, radii, spacing, shadows } from '../theme/tokens';
 
 export interface CardProps extends ViewProps {
   style?: ViewStyle;

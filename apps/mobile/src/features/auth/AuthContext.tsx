@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { apiRequest } from '../../lib/api.js';
-import { tokenStorage } from '../../lib/storage.js';
+import { apiRequest } from '../../lib/api';
+import { tokenStorage } from '../../lib/storage';
 import { User, AuthResponse } from '@miniledger/shared';
 
 export interface AuthContextType {

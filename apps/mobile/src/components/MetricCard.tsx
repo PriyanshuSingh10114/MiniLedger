@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { colors, radii, spacing, typography, shadows } from '../theme/tokens.js';
+import { colors, radii, spacing, typography, shadows } from '../theme/tokens';
 import { formatPaiseToINR } from '@miniledger/shared';
 
 export interface MetricCardProps {

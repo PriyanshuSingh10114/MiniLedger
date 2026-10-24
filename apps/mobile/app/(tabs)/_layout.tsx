@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { colors, typography } from '../../src/theme/tokens.js';
+import { colors, typography } from '../../src/theme/tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TabsLayout() {

@@ -9,11 +9,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useLoans } from '../../src/features/loans/useLoans.js';
-import { LoanCard } from '../../src/components/LoanCard.js';
-import { Input } from '../../src/components/Input.js';
-import { EmptyState } from '../../src/components/EmptyState.js';
-import { colors, radii, spacing, typography } from '../../src/theme/tokens.js';
+import { useLoans } from '../../src/features/loans/useLoans';
+import { LoanCard } from '../../src/components/LoanCard';
+import { Input } from '../../src/components/Input';
+import { EmptyState } from '../../src/components/EmptyState';
+import { colors, radii, spacing, typography } from '../../src/theme/tokens';
 import { Ionicons } from '@expo/vector-icons';
 import { LoanStatus } from '@miniledger/shared';
 

@@ -4,9 +4,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { queryClient } from '../src/lib/queryClient.js';
-import { AuthProvider, useAuth } from '../src/features/auth/AuthContext.js';
-import { colors } from '../src/theme/tokens.js';
+import { queryClient } from '../src/lib/queryClient';
+import { AuthProvider, useAuth } from '../src/features/auth/AuthContext';
+import { colors } from '../src/theme/tokens';
 
 function RootNavigationLayout() {
   const { isAuthenticated, isLoading } = useAuth();

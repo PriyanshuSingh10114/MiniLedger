@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAuth } from '../../src/features/auth/AuthContext.js';
-import { Button } from '../../src/components/Button.js';
-import { Input } from '../../src/components/Input.js';
-import { colors, radii, spacing, typography } from '../../src/theme/tokens.js';
+import { useAuth } from '../../src/features/auth/AuthContext';
+import { Button } from '../../src/components/Button';
+import { Input } from '../../src/components/Input';
+import { colors, radii, spacing, typography } from '../../src/theme/tokens';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function VerifyOtpScreen() {
