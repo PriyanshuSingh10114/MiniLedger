@@ -78,7 +78,12 @@ export class LoansService {
       note?: string;
     },
   ) {
-    const amountPaise = rupeesToPaise(data.amount);
+    let amountPaise: number;
+    try {
+      amountPaise = rupeesToPaise(data.amount);
+    } catch (err: any) {
+      throw new AppError(err?.message || 'Invalid loan amount', 400, 'INVALID_AMOUNT');
+    }
 
     // Validate due date
     const dueDateObj = new Date(data.dueDate);

@@ -6,14 +6,14 @@ export function validateBody(schema: AnyZodObject) {
     try {
       req.body = await schema.parseAsync(req.body);
       next();
-    } catch (err) {
-      if (err instanceof ZodError) {
+    } catch (err: any) {
+      if (err instanceof ZodError || err?.name === 'ZodError') {
         res.status(400).json({
           success: false,
           error: {
             code: 'VALIDATION_ERROR',
             message: 'Invalid request payload',
-            details: err.errors.map((e) => ({
+            details: (err.errors || []).map((e: any) => ({
               field: e.path.join('.'),
               message: e.message,
               code: e.code,
@@ -32,14 +32,14 @@ export function validateQuery(schema: AnyZodObject) {
     try {
       req.query = await schema.parseAsync(req.query);
       next();
-    } catch (err) {
-      if (err instanceof ZodError) {
+    } catch (err: any) {
+      if (err instanceof ZodError || err?.name === 'ZodError') {
         res.status(400).json({
           success: false,
           error: {
             code: 'VALIDATION_ERROR',
             message: 'Invalid query parameters',
-            details: err.errors.map((e) => ({
+            details: (err.errors || []).map((e: any) => ({
               field: e.path.join('.'),
               message: e.message,
               code: e.code,

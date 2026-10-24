@@ -36,6 +36,24 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     return;
   }
 
+  // Handle unhandled Zod Error if passed through
+  const anyErr = err as any;
+  if (anyErr?.name === 'ZodError') {
+    res.status(400).json({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid request payload',
+        details: (anyErr.errors || []).map((e: any) => ({
+          field: e.path?.join('.'),
+          message: e.message,
+          code: e.code,
+        })),
+      },
+    });
+    return;
+  }
+
   // Handle Prisma Known Request Errors
   const prismaErr = err as { code?: string; meta?: Record<string, unknown> };
   if (prismaErr.code === 'P2002') {

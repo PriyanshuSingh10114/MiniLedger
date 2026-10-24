@@ -317,4 +317,135 @@ describe('MiniLedger API End-to-End Integration Tests', () => {
       expect(res.status).toBe(200);
     });
   });
+
+  describe('6. Critical Edge Cases & Concurrency Tests', () => {
+    it('rejects invalid loan amounts: negative, zero, and excess precision', async () => {
+      // Re-login User 2
+      const loginRes = await request(app)
+        .post('/api/v1/auth/verify-otp')
+        .send({ phoneNumber: testPhoneUser2, otp: '123456' });
+
+      // If user2 was logged out or token refreshed, get token
+      const token = loginRes.body.data?.tokens?.accessToken || user2Token;
+
+      // Negative amount
+      const negRes = await request(app)
+        .post('/api/v1/loans')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ friendName: 'Test Negative', amount: -50, dueDate: '2026-12-31' });
+      expect(negRes.status).toBe(400);
+
+      // Excess decimals (3 decimal places)
+      const decRes = await request(app)
+        .post('/api/v1/loans')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ friendName: 'Test Decimals', amount: '10.999', dueDate: '2026-12-31' });
+      expect(decRes.status).toBe(400);
+
+      // Zero amount
+      const zeroRes = await request(app)
+        .post('/api/v1/loans')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ friendName: 'Test Zero', amount: 0, dueDate: '2026-12-31' });
+      expect(zeroRes.status).toBe(400);
+    });
+
+    it('rejects expired OTP challenge with 400 OTP_EXPIRED', async () => {
+      const expiredPhone = '+919999933333';
+      const { hashOtp } = await import('../../src/lib/hash.js');
+      const hashed = await hashOtp('112233');
+
+      await prisma.otpChallenge.create({
+        data: {
+          phoneNumber: expiredPhone,
+          hashedOtp: hashed,
+          expiresAt: new Date(Date.now() - 10000), // expired 10s ago
+        },
+      });
+
+      const res = await request(app)
+        .post('/api/v1/auth/verify-otp')
+        .send({ phoneNumber: expiredPhone, otp: '112233' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('OTP_EXPIRED');
+
+      // Cleanup
+      await prisma.otpChallenge.deleteMany({ where: { phoneNumber: expiredPhone } });
+    });
+
+    it('locks out OTP challenge after reaching OTP_MAX_ATTEMPTS', async () => {
+      const lockoutPhone = '+919999944444';
+      const { hashOtp } = await import('../../src/lib/hash.js');
+      const { AUTH_CONSTANTS } = await import('@miniledger/shared');
+      const hashed = await hashOtp('778899');
+
+      await prisma.otpChallenge.create({
+        data: {
+          phoneNumber: lockoutPhone,
+          hashedOtp: hashed,
+          expiresAt: new Date(Date.now() + 300000),
+          attempts: AUTH_CONSTANTS.OTP_MAX_ATTEMPTS, // already at max attempts
+        },
+      });
+
+      // Attempt should be blocked with 429 OTP_MAX_ATTEMPTS
+      const blockedRes = await request(app)
+        .post('/api/v1/auth/verify-otp')
+        .send({ phoneNumber: lockoutPhone, otp: '778899' });
+      expect(blockedRes.status).toBe(429);
+      expect(blockedRes.body.error.code).toBe('OTP_MAX_ATTEMPTS');
+
+      // Cleanup
+      await prisma.otpChallenge.deleteMany({ where: { phoneNumber: lockoutPhone } });
+    });
+
+    it('serializes concurrent repayment requests: exactly one succeeds and the other is rejected with ALREADY_REPAID', async () => {
+      // Login User 2 to get fresh token
+      const { hashOtp } = await import('../../src/lib/hash.js');
+      const hashed = await hashOtp('555555');
+      await prisma.otpChallenge.create({
+        data: {
+          phoneNumber: testPhoneUser2,
+          hashedOtp: hashed,
+          expiresAt: new Date(Date.now() + 300000),
+        },
+      });
+      const loginRes = await request(app)
+        .post('/api/v1/auth/verify-otp')
+        .send({ phoneNumber: testPhoneUser2, otp: '555555' });
+      const token = loginRes.body.data.tokens.accessToken;
+
+      // Create a fresh loan
+      const createRes = await request(app)
+        .post('/api/v1/loans')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          friendName: 'Concurrent Tester',
+          amount: 500,
+          dueDate: '2026-12-31',
+        });
+      expect(createRes.status).toBe(201);
+      const testLoanId = createRes.body.data.id;
+
+      // Launch 2 concurrent repayment requests simultaneously
+      const [res1, res2] = await Promise.all([
+        request(app)
+          .post(`/api/v1/loans/${testLoanId}/repayments`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({}),
+        request(app)
+          .post(`/api/v1/loans/${testLoanId}/repayments`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({}),
+      ]);
+
+      const statuses = [res1.status, res2.status].sort();
+      // Exactly one should succeed (200) and the other should fail (400 ALREADY_REPAID)
+      expect(statuses).toEqual([200, 400]);
+
+      const failedRes = res1.status === 400 ? res1 : res2;
+      expect(failedRes.body.error.code).toBe('ALREADY_REPAID');
+    });
+  });
 });
